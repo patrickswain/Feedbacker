@@ -10,9 +10,9 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-FeedbackerAudioProcessor::FeedbackerAudioProcessor()
+FeedbackerAudioProcessor::FeedbackerAudioProcessor() : apvts(*this, nullptr, "Parameters", createParameterLayout())
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
+     , AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
                       #if ! JucePlugin_IsSynth
                        .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
@@ -135,6 +135,10 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+    int numSamples = buffer.getNumSamples();
+
+    ParamSettings settings = getParamSettings(apvts);
+
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
@@ -144,24 +148,34 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
+    // Processing
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
 
-        // ..do something to the data...
+        for (int sample = 0; sample < numSamples; ++sample)
+        {
+            // Trigger
+
+            // Initial Filtering
+            
+            // Cook it up baby
+
+            // Focus high end / frequencies
+
+            // Saturation
+
+            // Final limiting
+
+            // Output signal
+        }
     }
 }
 
 //==============================================================================
 bool FeedbackerAudioProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return false; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* FeedbackerAudioProcessor::createEditor()
@@ -188,4 +202,26 @@ void FeedbackerAudioProcessor::setStateInformation (const void* data, int sizeIn
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new FeedbackerAudioProcessor();
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::a0, ParamNames::a0, ParamRanges::a0, 0.0f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::a1, ParamNames::a1, ParamRanges::a1, 0.0f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::b1, ParamNames::b1, ParamRanges::b1, 0.0f));
+    return layout;
+}
+
+ParamSettings getParamSettings(juce::AudioProcessorValueTreeState& apvts)
+{
+    ParamSettings settings;
+
+    // Cook volume
+    settings.a0 = apvts.getRawParameterValue(ParamIDs::a0)->load();
+    //settings.a1 = 1 - settings.a0;
+    settings.a1 = apvts.getRawParameterValue(ParamIDs::a1)->load();
+    settings.b1 = apvts.getRawParameterValue(ParamIDs::b1)->load();
+    return settings;
 }

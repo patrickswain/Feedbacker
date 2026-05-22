@@ -10,6 +10,35 @@
 
 #include <JuceHeader.h>
 
+struct ParamIDs
+{
+    static constexpr auto a0 = "a0";
+    static constexpr auto a1 = "a1";
+    static constexpr auto b1 = "b1";
+};
+
+struct ParamNames
+{
+    static constexpr auto a0 = "a0";
+    static constexpr auto a1 = "a1";
+    static constexpr auto b1 = "b1";
+};
+
+struct ParamSettings
+{
+    float a0 = { 0.5f };
+    float a1 = { 0.5f };
+    float b1 = { 0.5f };
+};
+
+struct ParamRanges
+{
+    inline static const juce::NormalisableRange<float> a0 = { -1.0f, 1.0f };
+    inline static const juce::NormalisableRange<float> a1 = { -1.0f, 1.0f };
+    inline static const juce::NormalisableRange<float> b1 = { -1.5f, 1.5f };
+};
+
+ParamSettings getParamSettings(juce::AudioProcessorValueTreeState& apvts);
 //==============================================================================
 /**
 */
@@ -53,7 +82,11 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    //==============================================================================
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    juce::AudioProcessorValueTreeState apvts;
 private:
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FeedbackerAudioProcessor)
 };
