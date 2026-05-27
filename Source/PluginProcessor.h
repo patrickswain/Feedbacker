@@ -17,7 +17,7 @@ struct ParamIDs
 
 struct ParamNames
 {
-    static constexpr auto triggerThreshold = "Trigger Threshold";
+    static constexpr auto triggerThreshold = "Trigger Threshold (db)";
 };
 
 struct ParamSettings
@@ -27,7 +27,13 @@ struct ParamSettings
 
 struct ParamRanges
 {
-    inline static const juce::NormalisableRange<float> triggerThreshold = { 0.0f, 1.5f };
+    //inline static const juce::NormalisableRange<float> triggerThreshold = { 0.0f, 1.5f };
+    inline static const juce::NormalisableRange<float> triggerThreshold = { -30.0f, 0.0f };
+};
+
+struct ParamDefaultValues
+{
+    static constexpr float triggerThreshold = { -20.0f };
 };
 
 ParamSettings getParamSettings(juce::AudioProcessorValueTreeState& apvts);
@@ -87,7 +93,7 @@ private:
     double currentAngle = 0.0;
     double angleDelta = 0.0;
     double oscFrequency = 440.0;
-    double oscLevel = 0.5;
+    double oscLevel = 0.25;
     //==============================================================================
     // For Trigger
     bool addFeedback = false;

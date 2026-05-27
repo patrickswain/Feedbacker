@@ -157,6 +157,8 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         float rmsLevel = buffer.getRMSLevel(channel, 0, numSamples);
 
+        rmsLevel = juce::Decibels::gainToDecibels(rmsLevel);
+
         if (rmsLevel < settings.triggerThreshold)
         {
             addFeedback = true;
@@ -224,7 +226,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::triggerThreshold, ParamNames::triggerThreshold, ParamRanges::triggerThreshold, 0.0f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::triggerThreshold, ParamNames::triggerThreshold, ParamRanges::triggerThreshold, ParamDefaultValues::triggerThreshold));
     return layout;
 }
 
@@ -234,5 +236,6 @@ ParamSettings getParamSettings(juce::AudioProcessorValueTreeState& apvts)
 
     // Cook volume
     settings.triggerThreshold = apvts.getRawParameterValue(ParamIDs::triggerThreshold)->load();
+    //settings.triggerThreshold = juce::Decibels::decibelsToGain(settings.triggerThreshold);
     return settings;
 }
