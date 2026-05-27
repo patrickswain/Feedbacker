@@ -95,6 +95,8 @@ void FeedbackerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    currentSampleRate = sampleRate;
+    updateAngleDelta();
 }
 
 void FeedbackerAudioProcessor::releaseResources()
@@ -153,22 +155,31 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     {
         auto* channelData = buffer.getWritePointer (channel);
 
-        for (int sample = 0; sample < numSamples; ++sample)
+        float rmsLevel = buffer.getRMSLevel(channel, 0, numSamples);
+
+        if (rmsLevel < settings.triggerThreshold)
         {
-            // Trigger
-
-            // Initial Filtering
-            
-            // Cook it up baby
-
-            // Focus high end / frequencies
-
-            // Saturation
-
-            // Final limiting
-
-            // Output signal
+            addFeedback = true;
         }
+        else
+        {
+            addFeedback = false;
+        }
+
+        DBG("RMS value = " << rmsLevel);
+        
+        if (addFeedback)
+        {
+            
+            for (auto sample = 0; sample < numSamples; ++sample)
+            {
+                auto currentSample = (float)std::sin(currentAngle);
+                currentAngle += angleDelta;
+                channelData[sample] = currentSample * oscLevel;
+                
+            }
+        }
+        
     }
 }
 
@@ -197,6 +208,11 @@ void FeedbackerAudioProcessor::setStateInformation (const void* data, int sizeIn
     // whose contents will have been created by the getStateInformation() call.
 }
 
+void FeedbackerAudioProcessor::updateAngleDelta()
+{
+    auto cyclesPerSample =  oscFrequency / currentSampleRate;
+    angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
+}
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
@@ -208,9 +224,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::a0, ParamNames::a0, ParamRanges::a0, 0.0f));
-    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::a1, ParamNames::a1, ParamRanges::a1, 0.0f));
-    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::b1, ParamNames::b1, ParamRanges::b1, 0.0f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::triggerThreshold, ParamNames::triggerThreshold, ParamRanges::triggerThreshold, 0.0f));
     return layout;
 }
 
@@ -219,9 +233,6 @@ ParamSettings getParamSettings(juce::AudioProcessorValueTreeState& apvts)
     ParamSettings settings;
 
     // Cook volume
-    settings.a0 = apvts.getRawParameterValue(ParamIDs::a0)->load();
-    //settings.a1 = 1 - settings.a0;
-    settings.a1 = apvts.getRawParameterValue(ParamIDs::a1)->load();
-    settings.b1 = apvts.getRawParameterValue(ParamIDs::b1)->load();
+    settings.triggerThreshold = apvts.getRawParameterValue(ParamIDs::triggerThreshold)->load();
     return settings;
 }
