@@ -10,44 +10,32 @@
 
 #include <JuceHeader.h>
 
-struct ParamIDs
+struct TriggerThresholdParam
 {
-    static constexpr auto triggerThreshold = "triggerThreshold";
-    static constexpr auto synthFrequency = "synthFrequency";
-    static constexpr auto synthVolume = "synthVolume";
+    static constexpr auto id = "triggerThreshold";
+    static constexpr auto name = "Trigger Threshold (db)";
+    inline static const juce::NormalisableRange<float> range = { -30.0f, 0.0f };
+    static constexpr float defaultValue = { -20.0f };
 };
 
-struct ParamNames
+struct SynthVolumeParam
 {
-    static constexpr auto triggerThreshold = "Trigger Threshold (db)";
-    static constexpr auto synthFrequency = "Synth Freq";
-    static constexpr auto synthVolume = "Synth Volume";
+    static constexpr auto id = "synthVolume";
+    static constexpr auto name = "Synth Volume";
+    inline static const juce::NormalisableRange<float> range = { 0.0f, 1.0f };;
+    static constexpr float defaultValue = { 0.5f };
 };
 
-struct ParamSettings
+struct SynthFrequencyParam
 {
-    float triggerThreshold = { 0.5f };
-    int synthFrequency = { 1000 };
-    //float synthFrequency = { 1000.0f };
-    float synthVolume = { 0.5f };
+    static constexpr auto id = "synthFrequency";
+    static constexpr auto name = "Synth Freq";
+    static juce::StringArray choices()
+    {
+        return { "200", "500", "1000", "1500", "2000" };
+    }
+    static constexpr float defaultValue = 0;
 };
-
-struct ParamRanges
-{
-    inline static const juce::NormalisableRange<float> triggerThreshold = { -30.0f, 0.0f };
-    //inline static const juce::NormalisableRange<float> synthFrequency = { 200.0f, 5000.0f };
-    inline static const juce::NormalisableRange<float> synthVolume = { 0.0f, 1.0f };
-};
-
-
-struct ParamDefaultValues
-{
-    static constexpr float triggerThreshold = { -20.0f };
-    static constexpr int synthFrequency = { 1000 };
-    //static constexpr float synthFrequency = { 1000.0f };
-    static constexpr float synthVolume = { 0.5f };
-};
-
 
 //==============================================================================
 /**
@@ -107,6 +95,8 @@ private:
     double angleDelta = 0.0;
     double oscFrequency = 440.0;
     double oscLevel = 0.25;
+
+    float rampUpSpeed = 0.0f;
     //==============================================================================
     // For Trigger
     bool addFeedback = false;

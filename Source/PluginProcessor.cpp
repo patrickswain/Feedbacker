@@ -227,18 +227,20 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 
     juce::StringArray frequencies = { "200", "500", "1000", "1500", "2000" };
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::triggerThreshold, ParamNames::triggerThreshold, ParamRanges::triggerThreshold, ParamDefaultValues::triggerThreshold));
-    layout.add(std::make_unique<juce::AudioParameterChoice>(ParamIDs::synthFrequency, ParamNames::synthFrequency, frequencies, 0));
-    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::synthVolume, ParamNames::synthVolume, ParamRanges::synthVolume, ParamDefaultValues::synthVolume));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(TriggerThresholdParam::id, TriggerThresholdParam::name, TriggerThresholdParam::range, TriggerThresholdParam::defaultValue));    
+    layout.add(std::make_unique<juce::AudioParameterFloat>(SynthVolumeParam::id, SynthVolumeParam::name, SynthVolumeParam::range, SynthVolumeParam::defaultValue));
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(SynthFrequencyParam::id, SynthFrequencyParam::name, SynthFrequencyParam::choices(), SynthFrequencyParam::defaultValue));
+
     return layout;
 }
 
 void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeState& apvts)
 {
-    triggerThreshold = apvts.getRawParameterValue(ParamIDs::triggerThreshold)->load();
-    oscLevel = static_cast<double>(apvts.getRawParameterValue(ParamIDs::synthVolume)->load());
+    triggerThreshold = apvts.getRawParameterValue(TriggerThresholdParam::id)->load();
+    oscLevel = static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
     //oscFrequency = static_cast<double>(apvts.getRawParameterValue(ParamIDs::synthFrequency)->load());
-    auto frequencyChoice = static_cast<int>(apvts.getRawParameterValue(ParamIDs::synthFrequency)->load());
+    auto frequencyChoice = static_cast<int>(apvts.getRawParameterValue(SynthFrequencyParam::id)->load());
 
     switch (frequencyChoice) {
         case 0:
