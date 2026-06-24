@@ -136,10 +136,9 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-
     int numSamples = buffer.getNumSamples();
 
-    ParamSettings settings = getParamSettings(apvts);
+    getParamSettings(apvts);
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
@@ -159,7 +158,7 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         rmsLevel = juce::Decibels::gainToDecibels(rmsLevel);
 
-        if (rmsLevel < settings.triggerThreshold)
+        if (rmsLevel < triggerThreshold)
         {
             addFeedback = true;
         }
@@ -177,7 +176,7 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             {
                 auto currentSample = (float)std::sin(currentAngle);
                 currentAngle += angleDelta;
-                channelData[sample] = currentSample * oscLevel;
+                channelData[sample] += currentSample * oscLevel;
                 
             }
         }
@@ -226,16 +225,41 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
+    juce::StringArray frequencies = { "200", "500", "1000", "1500", "2000" };
+
     layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::triggerThreshold, ParamNames::triggerThreshold, ParamRanges::triggerThreshold, ParamDefaultValues::triggerThreshold));
+    layout.add(std::make_unique<juce::AudioParameterChoice>(ParamIDs::synthFrequency, ParamNames::synthFrequency, frequencies, 0));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(ParamIDs::synthVolume, ParamNames::synthVolume, ParamRanges::synthVolume, ParamDefaultValues::synthVolume));
     return layout;
 }
 
-ParamSettings getParamSettings(juce::AudioProcessorValueTreeState& apvts)
+void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeState& apvts)
 {
-    ParamSettings settings;
+    triggerThreshold = apvts.getRawParameterValue(ParamIDs::triggerThreshold)->load();
+    oscLevel = static_cast<double>(apvts.getRawParameterValue(ParamIDs::synthVolume)->load());
+    //oscFrequency = static_cast<double>(apvts.getRawParameterValue(ParamIDs::synthFrequency)->load());
+    auto frequencyChoice = static_cast<int>(apvts.getRawParameterValue(ParamIDs::synthFrequency)->load());
 
-    // Cook volume
-    settings.triggerThreshold = apvts.getRawParameterValue(ParamIDs::triggerThreshold)->load();
-    //settings.triggerThreshold = juce::Decibels::decibelsToGain(settings.triggerThreshold);
-    return settings;
+    switch (frequencyChoice) {
+        case 0:
+            oscFrequency = 200.0;
+            break;
+        case 1:
+            oscFrequency = 500.0;
+            break;
+        case 2:
+            oscFrequency = 1000.0;
+            break;
+        case 3:
+            oscFrequency = 1500.0;
+            break;
+        case 4:
+            oscFrequency = 2000.0;
+            break;
+        default:
+            oscFrequency = 500.0;
+    }
+    
+    updateAngleDelta();
+
 }
