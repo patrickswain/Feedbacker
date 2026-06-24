@@ -18,6 +18,14 @@ struct TriggerThresholdParam
     static constexpr float defaultValue = { -20.0f };
 };
 
+struct RampUpSpeedParam
+{
+    static constexpr auto id = "rampUpSpeed";
+    static constexpr auto name = "Ramp Up Speed (milliseconds)";
+    inline static const juce::NormalisableRange<float> range = { 50.0f, 4000.0f }; // Double check for overflow problems
+    static constexpr float defaultValue = { 1000.0f };
+};
+
 struct SynthVolumeParam
 {
     static constexpr auto id = "synthVolume";
@@ -96,8 +104,11 @@ private:
     double oscFrequency = 440.0;
     double oscLevel = 0.25;
 
+    // Volume Ramp Up
     float rampUpSpeed = 0.0f;
-    //==============================================================================
+    float gainIncrement = 0.0f;
+    float currentGain = 0.0f;
+    
     // For Trigger
     bool addFeedback = false;
     float triggerThreshold = 0.0f;

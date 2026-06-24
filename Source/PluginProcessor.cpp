@@ -155,9 +155,7 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         auto* channelData = buffer.getWritePointer (channel);
 
         float rmsLevel = buffer.getRMSLevel(channel, 0, numSamples);
-
         rmsLevel = juce::Decibels::gainToDecibels(rmsLevel);
-
         if (rmsLevel < triggerThreshold)
         {
             addFeedback = true;
@@ -165,6 +163,7 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         else
         {
             addFeedback = false;
+            currentGain = 0.0f;
         }
 
         DBG("RMS value = " << rmsLevel);
@@ -176,8 +175,11 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             {
                 auto currentSample = (float)std::sin(currentAngle);
                 currentAngle += angleDelta;
-                channelData[sample] += currentSample * oscLevel;
+                channelData[sample] += currentSample * currentGain;
                 
+                currentGain += gainIncrement; // Linear, maybe switch to log for volume
+                if (currentGain > oscLevel)
+                    currentGain = 0.0f;
             }
         }
         
@@ -229,6 +231,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(TriggerThresholdParam::id, TriggerThresholdParam::name, TriggerThresholdParam::range, TriggerThresholdParam::defaultValue));    
     layout.add(std::make_unique<juce::AudioParameterFloat>(SynthVolumeParam::id, SynthVolumeParam::name, SynthVolumeParam::range, SynthVolumeParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(RampUpSpeedParam::id, RampUpSpeedParam::name, RampUpSpeedParam::range, RampUpSpeedParam::defaultValue));
 
     layout.add(std::make_unique<juce::AudioParameterChoice>(SynthFrequencyParam::id, SynthFrequencyParam::name, SynthFrequencyParam::choices(), SynthFrequencyParam::defaultValue));
 
@@ -238,8 +241,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeState& apvts)
 {
     triggerThreshold = apvts.getRawParameterValue(TriggerThresholdParam::id)->load();
+    rampUpSpeed = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
     oscLevel = static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
-    //oscFrequency = static_cast<double>(apvts.getRawParameterValue(ParamIDs::synthFrequency)->load());
+    // This works but is slower for smaller values
+    //gainIncrement = (oscLevel * (rampUpSpeed / 1000)) / static_cast<float>(currentSampleRate);
+    gainIncrement = oscLevel / (2 * (rampUpSpeed / 1000.0f) * static_cast<float>(currentSampleRate));
     auto frequencyChoice = static_cast<int>(apvts.getRawParameterValue(SynthFrequencyParam::id)->load());
 
     switch (frequencyChoice) {
