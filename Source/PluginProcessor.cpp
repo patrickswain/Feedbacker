@@ -93,9 +93,10 @@ void FeedbackerAudioProcessor::changeProgramName (int index, const juce::String&
 //==============================================================================
 void FeedbackerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
     currentSampleRate = sampleRate;
+
+    updateGain();
+
     updateAngleDelta();
 }
 
@@ -164,9 +165,10 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         {
             addFeedback = false;
             currentGain = 0.0f;
+            updateGain();
+            //smoothedGain.setCurrentAndTargetValue(0.0001f);
         }
 
-        DBG("RMS value = " << rmsLevel);
         
         if (addFeedback)
         {
@@ -175,11 +177,12 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             {
                 auto currentSample = (float)std::sin(currentAngle);
                 currentAngle += angleDelta;
-                channelData[sample] += currentSample * currentGain;
-                
-                currentGain += gainIncrement; // Linear, maybe switch to log for volume
-                if (currentGain > oscLevel)
-                    currentGain = 0.0f;
+                channelData[sample] += currentSample * currentGain;                               
+
+                currentGain = smoothedGain.getNextValue();
+                //currentGain += gainIncrementLog; // Linear, maybe switch to log for volume
+                //if (currentGain > oscLevel)
+                //    currentGain = 0.0f;
             }
         }
         
@@ -216,6 +219,13 @@ void FeedbackerAudioProcessor::updateAngleDelta()
     auto cyclesPerSample =  oscFrequency / currentSampleRate;
     angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
 }
+
+void FeedbackerAudioProcessor::updateGain()
+{
+    smoothedGain.reset(currentSampleRate, rampUpSpeed / 1000.00);
+    smoothedGain.setCurrentAndTargetValue(0.0001f);
+    smoothedGain.setTargetValue(oscLevel);
+}
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
@@ -240,12 +250,26 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 
 void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeState& apvts)
 {
+    // Feedback on/off logic
     triggerThreshold = apvts.getRawParameterValue(TriggerThresholdParam::id)->load();
-    rampUpSpeed = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
-    oscLevel = static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
-    // This works but is slower for smaller values
-    //gainIncrement = (oscLevel * (rampUpSpeed / 1000)) / static_cast<float>(currentSampleRate);
-    gainIncrement = oscLevel / (2 * (rampUpSpeed / 1000.0f) * static_cast<float>(currentSampleRate));
+    
+    // Volume ramp up
+    float rampUpSpeedNew = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
+    float rampUpSpeedInSeconds = rampUpSpeed / 1000.00;
+    float oscLevelNew = static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
+
+    gainIncrementLinear = oscLevel / (2 * (rampUpSpeed / 1000.0f) * static_cast<float>(currentSampleRate));
+    gainIncrementLog = 10 * log10(gainIncrementLinear);
+
+    if ((rampUpSpeedNew != rampUpSpeed) || (oscLevelNew != oscLevel))
+    {
+        updateGain();
+    }
+    
+    rampUpSpeed = rampUpSpeedNew;
+    oscLevel = oscLevelNew;
+
+    // Note choice
     auto frequencyChoice = static_cast<int>(apvts.getRawParameterValue(SynthFrequencyParam::id)->load());
 
     switch (frequencyChoice) {
