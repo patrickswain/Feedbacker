@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "../Daddys Library/HelloWorld.h"
 
 //==============================================================================
 FeedbackerAudioProcessor::FeedbackerAudioProcessor() : apvts(*this, nullptr, "Parameters", createParameterLayout())
@@ -22,6 +23,8 @@ FeedbackerAudioProcessor::FeedbackerAudioProcessor() : apvts(*this, nullptr, "Pa
                        )
 #endif
 {
+    leftOsc.initialise([](double x) { return sin(x); }, lookupTableSize);
+    rightOsc.initialise([](double x) { return sin(x); }, lookupTableSize);
 }
 
 FeedbackerAudioProcessor::~FeedbackerAudioProcessor()
@@ -95,9 +98,14 @@ void FeedbackerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
 {
     currentSampleRate = sampleRate;
 
-    updateGain();
+    juce::dsp::ProcessSpec spec;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.sampleRate = sampleRate;
 
-    updateAngleDelta();
+    leftOsc.prepare(spec);
+    rightOsc.prepare(spec);
+
+    updateGain();
 }
 
 void FeedbackerAudioProcessor::releaseResources()
@@ -139,14 +147,9 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     int numSamples = buffer.getNumSamples();
 
+    // update values to user inputs
     getParamSettings(apvts);
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
@@ -166,23 +169,24 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             addFeedback = false;
             currentGain = 0.0f;
             updateGain();
-            //smoothedGain.setCurrentAndTargetValue(0.0001f);
         }
 
-        
         if (addFeedback)
-        {
-            
+        {       
+            float currentSample;
             for (auto sample = 0; sample < numSamples; ++sample)
-            {
-                auto currentSample = (float)std::sin(currentAngle);
-                currentAngle += angleDelta;
-                channelData[sample] += currentSample * currentGain;                               
+            {         
 
+                if (channel == 0)
+                {
+                    currentSample = (float)leftOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
+                }
+                else
+                {
+                    currentSample = (float)rightOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
+                }
+                channelData[sample] += currentSample * currentGain;
                 currentGain = smoothedGain.getNextValue();
-                //currentGain += gainIncrementLog; // Linear, maybe switch to log for volume
-                //if (currentGain > oscLevel)
-                //    currentGain = 0.0f;
             }
         }
         
@@ -214,11 +218,6 @@ void FeedbackerAudioProcessor::setStateInformation (const void* data, int sizeIn
     // whose contents will have been created by the getStateInformation() call.
 }
 
-void FeedbackerAudioProcessor::updateAngleDelta()
-{
-    auto cyclesPerSample =  oscFrequency / currentSampleRate;
-    angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
-}
 
 void FeedbackerAudioProcessor::updateGain()
 {
@@ -237,13 +236,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
-    juce::StringArray frequencies = { "200", "500", "1000", "1500", "2000" };
-
     layout.add(std::make_unique<juce::AudioParameterFloat>(TriggerThresholdParam::id, TriggerThresholdParam::name, TriggerThresholdParam::range, TriggerThresholdParam::defaultValue));    
     layout.add(std::make_unique<juce::AudioParameterFloat>(SynthVolumeParam::id, SynthVolumeParam::name, SynthVolumeParam::range, SynthVolumeParam::defaultValue));
     layout.add(std::make_unique<juce::AudioParameterFloat>(RampUpSpeedParam::id, RampUpSpeedParam::name, RampUpSpeedParam::range, RampUpSpeedParam::defaultValue));
-
-    layout.add(std::make_unique<juce::AudioParameterChoice>(SynthFrequencyParam::id, SynthFrequencyParam::name, SynthFrequencyParam::choices(), SynthFrequencyParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(SynthFrequencyParam::id, SynthFrequencyParam::name, SynthFrequencyParam::range, SynthFrequencyParam::defaultValue));
 
     return layout;
 }
@@ -253,6 +249,11 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
     // Feedback on/off logic
     triggerThreshold = apvts.getRawParameterValue(TriggerThresholdParam::id)->load();
     
+    // Note choice
+    oscFrequency = apvts.getRawParameterValue(SynthFrequencyParam::id)->load();
+    leftOsc.setFrequency(oscFrequency);
+    rightOsc.setFrequency(oscFrequency);
+
     // Volume ramp up
     float rampUpSpeedNew = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
     float rampUpSpeedInSeconds = rampUpSpeed / 1000.00;
@@ -268,30 +269,4 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
     
     rampUpSpeed = rampUpSpeedNew;
     oscLevel = oscLevelNew;
-
-    // Note choice
-    auto frequencyChoice = static_cast<int>(apvts.getRawParameterValue(SynthFrequencyParam::id)->load());
-
-    switch (frequencyChoice) {
-        case 0:
-            oscFrequency = 200.0;
-            break;
-        case 1:
-            oscFrequency = 500.0;
-            break;
-        case 2:
-            oscFrequency = 1000.0;
-            break;
-        case 3:
-            oscFrequency = 1500.0;
-            break;
-        case 4:
-            oscFrequency = 2000.0;
-            break;
-        default:
-            oscFrequency = 500.0;
-    }
-    
-    updateAngleDelta();
-
 }

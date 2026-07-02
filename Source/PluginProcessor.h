@@ -38,12 +38,19 @@ struct SynthFrequencyParam
 {
     static constexpr auto id = "synthFrequency";
     static constexpr auto name = "Synth Freq";
-    static juce::StringArray choices()
-    {
-        return { "200", "500", "1000", "1500", "2000" };
-    }
-    static constexpr float defaultValue = 0;
+    inline static const juce::NormalisableRange<float> range = { 40.0f, 5000.0f };;
+    static constexpr float defaultValue = { 440.0f };
 };
+//struct SynthFrequencyParam
+//{
+//    static constexpr auto id = "synthFrequency";
+//    static constexpr auto name = "Synth Freq";
+//    static juce::StringArray choices()
+//    {
+//        return { "200", "500", "1000", "1500", "2000" };
+//    }
+//    static constexpr float defaultValue = 0;
+//};
 
 //==============================================================================
 /**
@@ -93,16 +100,18 @@ public:
     juce::AudioProcessorValueTreeState apvts;
     //==============================================================================
     void getParamSettings(juce::AudioProcessorValueTreeState& apvts);
-    void updateAngleDelta();
     void updateGain();
 private:
     //==============================================================================
     // For Sine Wave
     double currentSampleRate = 0.0;
-    double currentAngle = 0.0;
-    double angleDelta = 0.0;
     double oscFrequency = 440.0;
     double oscLevel = 0.25;
+
+    // juce oscillator
+    juce::dsp::Oscillator<double> leftOsc;
+    juce::dsp::Oscillator<double> rightOsc;
+    size_t lookupTableSize = 1024;
 
     // Volume Ramp Up
     float rampUpSpeed = 0.0f;

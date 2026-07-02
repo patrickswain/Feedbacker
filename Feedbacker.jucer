@@ -3,6 +3,10 @@
 <JUCERPROJECT id="NeH6eo" name="Feedbacker" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
   <MAINGROUP id="PUTjRd" name="Feedbacker">
+    <GROUP id="{A95CBAE4-39CE-36C5-0B8A-D24F403DC33E}" name="Daddys Library">
+      <FILE id="jiqQGf" name="HelloWorld.cpp" compile="1" resource="0" file="Daddys Library/HelloWorld.cpp"/>
+      <FILE id="vuSnKb" name="HelloWorld.h" compile="0" resource="0" file="Daddys Library/HelloWorld.h"/>
+    </GROUP>
     <GROUP id="{5BBD398A-553D-830C-1A07-0D2CF0FB5B8A}" name="Source">
       <FILE id="JyIrf0" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
