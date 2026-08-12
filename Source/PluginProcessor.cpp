@@ -8,7 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "../Daddys Library/HelloWorld.h"
+
 
 //==============================================================================
 FeedbackerAudioProcessor::FeedbackerAudioProcessor() : apvts(*this, nullptr, "Parameters", createParameterLayout())
@@ -102,10 +102,12 @@ void FeedbackerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     spec.maximumBlockSize = samplesPerBlock;
     spec.sampleRate = sampleRate;
 
-    leftOsc.prepare(spec);
-    rightOsc.prepare(spec);
+    oscManager.prepare(spec);
 
-    updateGain();
+    //leftOsc.prepare(spec);
+    //rightOsc.prepare(spec);
+
+    //updateGain();
 }
 
 void FeedbackerAudioProcessor::releaseResources()
@@ -142,6 +144,7 @@ bool FeedbackerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 
 void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    //test.testClass();
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -173,21 +176,25 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         if (addFeedback)
         {       
-            float currentSample;
-            for (auto sample = 0; sample < numSamples; ++sample)
-            {         
+            juce::dsp::AudioBlock<float> block(buffer);
+            juce::dsp::ProcessContextReplacing<float> context(block);
+            oscManager.process(context);
+            //float currentSample;
+            //for (auto sample = 0; sample < numSamples; ++sample)
+            //{         
 
-                if (channel == 0)
-                {
-                    currentSample = (float)leftOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
-                }
-                else
-                {
-                    currentSample = (float)rightOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
-                }
-                channelData[sample] += currentSample * currentGain;
-                currentGain = smoothedGain.getNextValue();
-            }
+            //    if (channel == 0)
+            //    {
+            //        
+            //        currentSample = (float)leftOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
+            //    }
+            //    else
+            //    {
+            //        currentSample = (float)rightOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
+            //    }
+            //    channelData[sample] += currentSample * currentGain;
+            //    currentGain = smoothedGain.getNextValue();
+            //}
         }
         
     }
@@ -246,6 +253,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 
 void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeState& apvts)
 {
+    
+
     // Feedback on/off logic
     triggerThreshold = apvts.getRawParameterValue(TriggerThresholdParam::id)->load();
     
@@ -269,4 +278,6 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
     
     rampUpSpeed = rampUpSpeedNew;
     oscLevel = oscLevelNew;
+
+    
 }

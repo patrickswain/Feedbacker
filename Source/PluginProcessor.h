@@ -9,6 +9,15 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "MyOsc.h"
+#include "OscManager.h"
+
+static const struct ParamSettings
+{
+    float osc1Gain;
+    float osc1Freq;
+    bool addFeedback;
+};
 
 struct TriggerThresholdParam
 {
@@ -108,6 +117,9 @@ private:
     double oscFrequency = 440.0;
     double oscLevel = 0.25;
 
+    OscManager oscManager;
+    ParamSettings settings;
+
     // juce oscillator
     juce::dsp::Oscillator<double> leftOsc;
     juce::dsp::Oscillator<double> rightOsc;
@@ -125,6 +137,8 @@ private:
     // For Trigger
     bool addFeedback = false;
     float triggerThreshold = 0.0f;
+
+    MyOsc test;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FeedbackerAudioProcessor)
 };
