@@ -23,12 +23,15 @@ public:
     template <typename ProcessContext>
     void process(const ProcessContext& context)
     {
+
+        //currentPitch = targetPitch * pitchLfo
+        maintone.setFrequency(targetPitch);
         maintone.process(context);
     }
 
-    void setTargetPitch(float pitch);
-    void setTargetVolume(float volume);
-    double sinWaveNextSample(double frequency);
+    void setFrequency(float newFrequency);
+    void setGain(float newGain);
+
 
 
 private:
@@ -42,10 +45,6 @@ private:
     float targetGain;
 
     //State currentState;
-    double maintonePhase = 0;
-    double pitchPhase = 0;
-    double volumePhase = 0;
-
     
     juce::dsp::Oscillator<float> maintone;
     size_t lookupTableSize = 1024;

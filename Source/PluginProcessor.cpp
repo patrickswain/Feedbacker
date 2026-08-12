@@ -23,8 +23,7 @@ FeedbackerAudioProcessor::FeedbackerAudioProcessor() : apvts(*this, nullptr, "Pa
                        )
 #endif
 {
-    leftOsc.initialise([](double x) { return sin(x); }, lookupTableSize);
-    rightOsc.initialise([](double x) { return sin(x); }, lookupTableSize);
+    
 }
 
 FeedbackerAudioProcessor::~FeedbackerAudioProcessor()
@@ -104,9 +103,6 @@ void FeedbackerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
 
     oscManager.prepare(spec);
 
-    //leftOsc.prepare(spec);
-    //rightOsc.prepare(spec);
-
     //updateGain();
 }
 
@@ -165,7 +161,7 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         rmsLevel = juce::Decibels::gainToDecibels(rmsLevel);
         if (rmsLevel < triggerThreshold)
         {
-            addFeedback = true;
+            addFeedback = true; //settings.addFeedback = true;
         }
         else
         {
@@ -176,6 +172,8 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         if (addFeedback)
         {       
+            oscManager.updateSettings(settings);
+
             juce::dsp::AudioBlock<float> block(buffer);
             juce::dsp::ProcessContextReplacing<float> context(block);
             oscManager.process(context);
@@ -260,8 +258,6 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
     
     // Note choice
     oscFrequency = apvts.getRawParameterValue(SynthFrequencyParam::id)->load();
-    leftOsc.setFrequency(oscFrequency);
-    rightOsc.setFrequency(oscFrequency);
 
     // Volume ramp up
     float rampUpSpeedNew = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
@@ -279,5 +275,7 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
     rampUpSpeed = rampUpSpeedNew;
     oscLevel = oscLevelNew;
 
-    
+    settings.addFeedback = true;
+    settings.osc1Freq = oscFrequency;
+    settings.osc1Gain = oscLevel;
 }

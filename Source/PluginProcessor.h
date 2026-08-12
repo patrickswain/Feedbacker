@@ -11,13 +11,8 @@
 #include <JuceHeader.h>
 #include "MyOsc.h"
 #include "OscManager.h"
+#include "ParamSettings.h"
 
-static const struct ParamSettings
-{
-    float osc1Gain;
-    float osc1Freq;
-    bool addFeedback;
-};
 
 struct TriggerThresholdParam
 {
@@ -50,20 +45,7 @@ struct SynthFrequencyParam
     inline static const juce::NormalisableRange<float> range = { 40.0f, 5000.0f };;
     static constexpr float defaultValue = { 440.0f };
 };
-//struct SynthFrequencyParam
-//{
-//    static constexpr auto id = "synthFrequency";
-//    static constexpr auto name = "Synth Freq";
-//    static juce::StringArray choices()
-//    {
-//        return { "200", "500", "1000", "1500", "2000" };
-//    }
-//    static constexpr float defaultValue = 0;
-//};
 
-//==============================================================================
-/**
-*/
 class FeedbackerAudioProcessor  : public juce::AudioProcessor
 {
 public:
@@ -117,13 +99,9 @@ private:
     double oscFrequency = 440.0;
     double oscLevel = 0.25;
 
-    OscManager oscManager;
     ParamSettings settings;
-
-    // juce oscillator
-    juce::dsp::Oscillator<double> leftOsc;
-    juce::dsp::Oscillator<double> rightOsc;
-    size_t lookupTableSize = 1024;
+    OscManager oscManager;
+    
 
     // Volume Ramp Up
     float rampUpSpeed = 0.0f;

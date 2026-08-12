@@ -31,4 +31,9 @@ void OscManager::prepare(const juce::dsp::ProcessSpec& spec)
     osc1.prepare(spec);
 }
 
+void OscManager::updateSettings(const ParamSettings& settings) // figure out a reference to make this smaller
+{
+    osc1.setFrequency(settings.osc1Freq);
+    osc1.setGain(settings.osc1Gain);
 
+}

@@ -30,21 +30,13 @@ void MyOsc::prepare(const juce::dsp::ProcessSpec& spec)
     maintone.setFrequency(440.0f);
 }
 
-
-
-void MyOsc::setTargetPitch(float pitch)
+void MyOsc::setFrequency(float newFrequency)
 {
-
-}
-void MyOsc::setTargetVolume(float volume)
-{
-
+    targetPitch = newFrequency;
 }
 
-double MyOsc::sinWaveNextSample(double frequency)
+void MyOsc::setGain(float newGain)
 {
-    double sample = sin(maintonePhase * juce::MathConstants<double>::twoPi);
-    if (maintonePhase >= 1.0) maintonePhase -= 1.0;
-    maintonePhase += (1.0 / (sampleRate * frequency));
-    return sample;
+    targetGain = newGain;
 }
+

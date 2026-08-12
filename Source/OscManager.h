@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "MyOsc.h"
+#include "ParamSettings.h"
 
 class OscManager
 {
@@ -27,12 +28,15 @@ public:
         osc1.process(context);
     }
 
+    void updateSettings(const ParamSettings& settings);
+
 
  
 private:
     double sampleRate;
     int samplesPerBlock;
     
+
     MyOsc osc1;
     //Oscillator Osc1;
     //Oscillator Osc2;
