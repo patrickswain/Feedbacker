@@ -25,11 +25,35 @@ public:
     template <typename ProcessContext>
     void process(const ProcessContext& context)
     {
+        switch (currentState)
+        {
+        case IDLE:
+            if (addFeedback)
+            {
+                currentState = RAMP_UP;
+                setOscillatorsState(RAMP_UP); 
+            }
+            break;
+        case RAMP_UP:
+            if (!addFeedback)
+            {
+                currentState = IDLE;
+                setOscillatorsState(IDLE);
+            }
+            break;
+        case HOLD_NOTE:
+            break;
+        case NOTE_CHANGE:
+            break;
+        default:
+            break;
+        }
+
         osc1.process(context);
     }
 
     void updateSettings(const ParamSettings& settings);
-
+    void setOscillatorsState(State state);
 
  
 private:
@@ -38,11 +62,14 @@ private:
     
 
     MyOsc osc1;
+    
     //Oscillator Osc1;
     //Oscillator Osc2;
     //vector oscillators
     bool addFeedback;
-    //State currentState
+    
+    State currentState = RAMP_UP;
+    
     float rampUpTime;
     float rampUpTimeCurrent; //(increment in samples)
 

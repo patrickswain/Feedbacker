@@ -18,7 +18,7 @@ struct TriggerThresholdParam
 {
     static constexpr auto id = "triggerThreshold";
     static constexpr auto name = "Trigger Threshold (db)";
-    inline static const juce::NormalisableRange<float> range = { -30.0f, 0.0f };
+    inline static const juce::NormalisableRange<float> range = { -100.0f, 0.0f };
     static constexpr float defaultValue = { -20.0f };
 };
 

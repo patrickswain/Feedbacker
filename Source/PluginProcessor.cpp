@@ -140,7 +140,6 @@ bool FeedbackerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 
 void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    //test.testClass();
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -159,24 +158,31 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         float rmsLevel = buffer.getRMSLevel(channel, 0, numSamples);
         rmsLevel = juce::Decibels::gainToDecibels(rmsLevel);
+        DBG("rmsLevel = " << rmsLevel << " Trigger is = " << triggerThreshold);
         if (rmsLevel < triggerThreshold)
         {
-            addFeedback = true; //settings.addFeedback = true;
+            settings.addFeedback = true;
+            //DBG("Add Feedback = True");
         }
         else
         {
-            addFeedback = false;
-            currentGain = 0.0f;
-            updateGain();
+            settings.addFeedback = false;
+            //DBG("Add Feedback = false");
+            //currentGain = 0.0f;
+            //updateGain();
         }
 
-        if (addFeedback)
+        if (settings.addFeedback)
         {       
             oscManager.updateSettings(settings);
 
             juce::dsp::AudioBlock<float> block(buffer);
             juce::dsp::ProcessContextReplacing<float> context(block);
-            oscManager.process(context);
+            
+            if (channel == 0)
+            {
+                oscManager.process(context);
+            }
             //float currentSample;
             //for (auto sample = 0; sample < numSamples; ++sample)
             //{         
@@ -251,7 +257,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 
 void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeState& apvts)
 {
-    
 
     // Feedback on/off logic
     triggerThreshold = apvts.getRawParameterValue(TriggerThresholdParam::id)->load();
@@ -264,18 +269,18 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
     float rampUpSpeedInSeconds = rampUpSpeed / 1000.00;
     float oscLevelNew = static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
 
-    gainIncrementLinear = oscLevel / (2 * (rampUpSpeed / 1000.0f) * static_cast<float>(currentSampleRate));
-    gainIncrementLog = 10 * log10(gainIncrementLinear);
+    //gainIncrementLinear = oscLevel / (2 * (rampUpSpeed / 1000.0f) * static_cast<float>(currentSampleRate));
+    //gainIncrementLog = 10 * log10(gainIncrementLinear);
 
-    if ((rampUpSpeedNew != rampUpSpeed) || (oscLevelNew != oscLevel))
-    {
-        updateGain();
-    }
-    
-    rampUpSpeed = rampUpSpeedNew;
-    oscLevel = oscLevelNew;
+    //if ((rampUpSpeedNew != rampUpSpeed) || (oscLevelNew != oscLevel))
+    //{
+    //    updateGain();
+    //}
+    //
+    //rampUpSpeed = rampUpSpeedNew;
+    //oscLevel = oscLevelNew;
 
-    settings.addFeedback = true;
     settings.osc1Freq = oscFrequency;
     settings.osc1Gain = oscLevel;
+    settings.osc1rampUpSpeed = rampUpSpeedInSeconds;
 }
