@@ -146,6 +146,7 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     int numSamples = buffer.getNumSamples();
 
     // update values to user inputs
+    // At this point basically just gets the threshold bc the rest are sent to osc manager
     getParamSettings(apvts);
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
@@ -162,7 +163,6 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         if (rmsLevel < triggerThreshold)
         {
             settings.addFeedback = true;
-            //DBG("Add Feedback = True");
         }
         else
         {
@@ -172,10 +172,10 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             //updateGain();
         }
 
-        if (settings.addFeedback)
-        {       
-            oscManager.updateSettings(settings);
+        oscManager.updateSettings(settings);
 
+        if (settings.addFeedback)
+        {                   
             juce::dsp::AudioBlock<float> block(buffer);
             juce::dsp::ProcessContextReplacing<float> context(block);
             
@@ -262,25 +262,11 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
     triggerThreshold = apvts.getRawParameterValue(TriggerThresholdParam::id)->load();
     
     // Note choice
-    oscFrequency = apvts.getRawParameterValue(SynthFrequencyParam::id)->load();
+    settings.osc1Freq = apvts.getRawParameterValue(SynthFrequencyParam::id)->load();
 
     // Volume ramp up
     float rampUpSpeedNew = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
-    float rampUpSpeedInSeconds = rampUpSpeed / 1000.00;
-    float oscLevelNew = static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
-
-    //gainIncrementLinear = oscLevel / (2 * (rampUpSpeed / 1000.0f) * static_cast<float>(currentSampleRate));
-    //gainIncrementLog = 10 * log10(gainIncrementLinear);
-
-    //if ((rampUpSpeedNew != rampUpSpeed) || (oscLevelNew != oscLevel))
-    //{
-    //    updateGain();
-    //}
-    //
-    //rampUpSpeed = rampUpSpeedNew;
-    //oscLevel = oscLevelNew;
-
-    settings.osc1Freq = oscFrequency;
-    settings.osc1Gain = oscLevel;
-    settings.osc1rampUpSpeed = rampUpSpeedInSeconds;
+    settings.osc1rampUpSpeed = rampUpSpeed / 1000.00;
+    settings.osc1Gain = apvts.getRawParameterValue(SynthVolumeParam::id)->load();//static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
+    
 }

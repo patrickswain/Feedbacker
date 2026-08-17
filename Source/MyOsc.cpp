@@ -37,20 +37,32 @@ void MyOsc::setFrequency(float newFrequency)
 
 void MyOsc::setGain(float newGain)
 {
-    targetGain = newGain;
-    DBG("Ramp up in myosc = " << rampUpSpeed);
-    smoothedGain.reset(sampleRate, rampUpSpeed);
-    smoothedGain.setCurrentAndTargetValue(0.0001f);
-    smoothedGain.setTargetValue(targetGain);
-
+    if (newGain != targetGain)
+    {
+        targetGain = newGain;
+        smoothedGain.reset(sampleRate, rampUpSpeed);
+        smoothedGain.setCurrentAndTargetValue(0.0001f);
+        smoothedGain.setTargetValue(targetGain);
+    }
 }
 
 void MyOsc::setRampUpSpeed(float newRampUpSpeed)
 {
-    smoothedGain.reset(sampleRate, static_cast<double>(newRampUpSpeed));
+    if (newRampUpSpeed != rampUpSpeed)
+    {
+        smoothedGain.reset(sampleRate, static_cast<double>(newRampUpSpeed));
+        rampUpSpeed = newRampUpSpeed;
+    }
 }
 
 void MyOsc::setState(State newState)
 {
     currentState = newState;
+}
+
+void MyOsc::updateGain()
+{
+    smoothedGain.reset(sampleRate, rampUpSpeed);
+    smoothedGain.setCurrentAndTargetValue(0.0001f);
+    smoothedGain.setTargetValue(targetGain);
 }

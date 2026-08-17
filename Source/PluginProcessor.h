@@ -116,7 +116,6 @@ private:
     bool addFeedback = false;
     float triggerThreshold = 0.0f;
 
-    MyOsc test;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FeedbackerAudioProcessor)
 };

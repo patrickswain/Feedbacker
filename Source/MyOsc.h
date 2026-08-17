@@ -35,13 +35,12 @@ public:
         
         auto* dst = outBlock.getChannelPointer(0);
 
-        for (size_t i = 0; i < len; ++i)
-            dst[i] += maintone.processSample(0);
-       
-
+        
         switch (currentState)
         {
         case IDLE:
+            currentGain = 0.0f;
+            updateGain(); // reset volume to zero for next ramp up            
             break;
         case RAMP_UP:
 
@@ -67,15 +66,15 @@ public:
     void setGain(float newGain);
     void setRampUpSpeed(float newSpeed);
     void setState(State newState);
-
+    void updateGain();
 
 
 private:
-    double sampleRate;
-    int samplesPerBlock;
+    double sampleRate = 48000;
+    int samplesPerBlock = 512;
 
-    float currentPitch;
-    float targetPitch;
+    float currentPitch = 440.0f;
+    float targetPitch = 440.0f;
 
     double rampUpSpeed = 0.0; // Set from osc manager
     float currentGain = 0.0f;

@@ -62,20 +62,17 @@ private:
     
 
     MyOsc osc1;
-    
-    //Oscillator Osc1;
-    //Oscillator Osc2;
-    //vector oscillators
+
     bool addFeedback;
     
-    State currentState = RAMP_UP;
+    State currentState = IDLE;
     
-    float rampUpTime;
-    float rampUpTimeCurrent; //(increment in samples)
+    int rampUpTime;
+    int rampUpTimeCurrent; //(increment in samples)
 
-    float holdTime;
-    float holdTimeCurrent;//(increment in samples)
+    int holdTime;
+    int holdTimeCurrent;//(increment in samples)
 
-    float noteChangeTime;
-    float noteChangeTimeCurrent;//(increment in samples)
+    int noteChangeTime;
+    int noteChangeTimeCurrent;//(increment in samples)
 };
