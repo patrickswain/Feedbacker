@@ -25,6 +25,9 @@ public:
     template <typename ProcessContext>
     void process(const ProcessContext& context)
     {
+        std::string af = addFeedback ? "true" : "false";
+        DBG("State in manager = " << currentState);
+        DBG("addFeedback in manager = " << af);
         switch (currentState)
         {
         case IDLE:
@@ -63,12 +66,12 @@ private:
 
     MyOsc osc1;
 
-    bool addFeedback;
+    bool addFeedback = false;
     
     State currentState = IDLE;
     
-    int rampUpTime;
-    int rampUpTimeCurrent; //(increment in samples)
+    int rampUpTime = 0;
+    int rampUpTimeCurrent = 0; //(increment in samples)
 
     int holdTime;
     int holdTimeCurrent;//(increment in samples)

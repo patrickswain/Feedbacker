@@ -14,7 +14,7 @@ struct ParamSettings
 {
     float osc1Gain;
     float osc1Freq;
-    float osc1rampUpSpeed;
+    float osc1rampUpSpeedSeconds;
     bool addFeedback;
 };
 

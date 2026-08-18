@@ -35,9 +35,9 @@ void MyOsc::setFrequency(float newFrequency)
     targetPitch = newFrequency;
 }
 
-void MyOsc::setGain(float newGain)
+void MyOsc::setGain(float newGain) // Used for OscManager to set
 {
-    if (newGain != targetGain)
+    if (newGain != targetGain) // revent reseting when settings are constanly updated
     {
         targetGain = newGain;
         smoothedGain.reset(sampleRate, rampUpSpeed);
@@ -46,12 +46,19 @@ void MyOsc::setGain(float newGain)
     }
 }
 
+void MyOsc::updateGain() // Used to reset smoothed gain when in idle state
+{    
+        smoothedGain.reset(sampleRate, rampUpSpeed);
+        smoothedGain.setCurrentAndTargetValue(0.0001f);
+        smoothedGain.setTargetValue(targetGain);    
+}
+
 void MyOsc::setRampUpSpeed(float newRampUpSpeed)
 {
-    if (newRampUpSpeed != rampUpSpeed)
+    if (newRampUpSpeed != rampUpSpeed) // prevent reseting when settings are constanly updated
     {
-        smoothedGain.reset(sampleRate, static_cast<double>(newRampUpSpeed));
-        rampUpSpeed = newRampUpSpeed;
+        rampUpSpeed = static_cast<double>(newRampUpSpeed);
+        smoothedGain.reset(sampleRate, rampUpSpeed);
     }
 }
 
@@ -60,9 +67,3 @@ void MyOsc::setState(State newState)
     currentState = newState;
 }
 
-void MyOsc::updateGain()
-{
-    smoothedGain.reset(sampleRate, rampUpSpeed);
-    smoothedGain.setCurrentAndTargetValue(0.0001f);
-    smoothedGain.setTargetValue(targetGain);
-}

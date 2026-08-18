@@ -25,30 +25,31 @@ public:
     template <typename ProcessContext>
     void process(const ProcessContext& context)
     {
-        auto&& outBlock = context.getOutputBlock();
+        auto&& outputBlock = context.getOutputBlock();
 
-        auto len = outBlock.getNumSamples();
-        auto numChannels = outBlock.getNumChannels();
+        auto numSamples = outputBlock.getNumSamples();
+        auto numChannels = outputBlock.getNumChannels();
         //auto inputChannels = inBlock.getNumChannels();
-
+        auto* buffer = outputBlock.getChannelPointer(0);
         maintone.setFrequency(targetPitch);
         
-        auto* dst = outBlock.getChannelPointer(0);
-
         
+
         switch (currentState)
         {
         case IDLE:
             currentGain = 0.0f;
-            updateGain(); // reset volume to zero for next ramp up            
+            updateGain();
+            //DBG("current gain in process = " << currentGain);
             break;
         case RAMP_UP:
 
-            for (size_t i = 0; i < len; ++i)
+            for (size_t i = 0; i < numSamples; ++i)
             {
-                dst[i] += maintone.processSample(0) * currentGain; //* lfo gain
+                //DBG("currentGain in process = " << currentGain);
+                buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain
+                currentGain = smoothedGain.getNextValue();
             }
-            currentGain = smoothedGain.getNextValue();
             break;
         case HOLD_NOTE:
             break;
@@ -57,16 +58,14 @@ public:
         default:
             break;
         }
-        //currentPitch = targetPitch * pitchLfo
-        //maintone.setFrequency(targetPitch);
-        //maintone.process(context);
+ 
     }
 
     void setFrequency(float newFrequency);
     void setGain(float newGain);
+    void updateGain();
     void setRampUpSpeed(float newSpeed);
     void setState(State newState);
-    void updateGain();
 
 
 private:

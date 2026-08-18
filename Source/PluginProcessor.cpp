@@ -159,7 +159,6 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         float rmsLevel = buffer.getRMSLevel(channel, 0, numSamples);
         rmsLevel = juce::Decibels::gainToDecibels(rmsLevel);
-        DBG("rmsLevel = " << rmsLevel << " Trigger is = " << triggerThreshold);
         if (rmsLevel < triggerThreshold)
         {
             settings.addFeedback = true;
@@ -167,40 +166,18 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         else
         {
             settings.addFeedback = false;
-            //DBG("Add Feedback = false");
-            //currentGain = 0.0f;
-            //updateGain();
         }
 
         oscManager.updateSettings(settings);
-
-        if (settings.addFeedback)
-        {                   
-            juce::dsp::AudioBlock<float> block(buffer);
-            juce::dsp::ProcessContextReplacing<float> context(block);
+                          
+        juce::dsp::AudioBlock<float> block(buffer);
+        juce::dsp::ProcessContextReplacing<float> context(block);
             
-            if (channel == 0)
-            {
-                oscManager.process(context);
-            }
-            //float currentSample;
-            //for (auto sample = 0; sample < numSamples; ++sample)
-            //{         
-
-            //    if (channel == 0)
-            //    {
-            //        
-            //        currentSample = (float)leftOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
-            //    }
-            //    else
-            //    {
-            //        currentSample = (float)rightOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
-            //    }
-            //    channelData[sample] += currentSample * currentGain;
-            //    currentGain = smoothedGain.getNextValue();
-            //}
+        if (channel == 0)
+        {
+            oscManager.process(context);
         }
-        
+ 
     }
 }
 
@@ -232,9 +209,9 @@ void FeedbackerAudioProcessor::setStateInformation (const void* data, int sizeIn
 
 void FeedbackerAudioProcessor::updateGain()
 {
-    smoothedGain.reset(currentSampleRate, rampUpSpeed / 1000.00);
-    smoothedGain.setCurrentAndTargetValue(0.0001f);
-    smoothedGain.setTargetValue(oscLevel);
+    //smoothedGain.reset(currentSampleRate, settings.osc1rampUpSpeedSeconds);
+    //smoothedGain.setCurrentAndTargetValue(0.0001f);
+    //smoothedGain.setTargetValue(oscLevel);
 }
 //==============================================================================
 // This creates new instances of the plugin..
@@ -265,8 +242,7 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
     settings.osc1Freq = apvts.getRawParameterValue(SynthFrequencyParam::id)->load();
 
     // Volume ramp up
-    float rampUpSpeedNew = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
-    settings.osc1rampUpSpeed = rampUpSpeed / 1000.00;
+    float rampUpSpeedMs = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
+    settings.osc1rampUpSpeedSeconds = rampUpSpeedMs / 1000.00;
     settings.osc1Gain = apvts.getRawParameterValue(SynthVolumeParam::id)->load();//static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
-    
 }

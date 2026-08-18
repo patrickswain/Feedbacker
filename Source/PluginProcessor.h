@@ -102,18 +102,6 @@ private:
     ParamSettings settings;
     OscManager oscManager;
     
-
-    // Volume Ramp Up
-    float rampUpSpeed = 0.0f;
-    float gainIncrement = 0.0f;
-    float gainIncrementLinear = 0.0f;
-    float gainIncrementLog = 0.0f;
-    float currentGain = 0.0f;
-    float maxIncrementLog = 0.0f;
-    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Multiplicative> smoothedGain;
-
-    // For Trigger
-    bool addFeedback = false;
     float triggerThreshold = 0.0f;
 
     //==============================================================================
