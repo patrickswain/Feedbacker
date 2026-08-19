@@ -33,8 +33,6 @@ public:
         auto* buffer = outputBlock.getChannelPointer(0);
         maintone.setFrequency(targetPitch);
         
-        
-
         switch (currentState)
         {
         case IDLE:
@@ -52,6 +50,10 @@ public:
             }
             break;
         case HOLD_NOTE:
+            for (size_t i = 0; i < numSamples; ++i)
+            {
+                buffer[i] += maintone.processSample(0) * targetGain; //* lfo gain
+            }
             break;
         case NOTE_CHANGE:
             break;

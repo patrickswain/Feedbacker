@@ -144,6 +144,7 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     int numSamples = buffer.getNumSamples();
+    settings.numSamples = numSamples;
 
     // update values to user inputs
     // At this point basically just gets the threshold bc the rest are sent to osc manager

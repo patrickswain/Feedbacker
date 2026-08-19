@@ -15,6 +15,7 @@ struct ParamSettings
     float osc1Gain;
     float osc1Freq;
     float osc1rampUpSpeedSeconds;
+    int numSamples;
     bool addFeedback;
 };
 

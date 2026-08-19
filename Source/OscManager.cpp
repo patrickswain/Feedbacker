@@ -33,11 +33,17 @@ void OscManager::prepare(const juce::dsp::ProcessSpec& spec)
 
 void OscManager::updateSettings(const ParamSettings& settings) 
 {
+    numSamples = settings.numSamples;
     addFeedback = settings.addFeedback;
 
     osc1.setFrequency(settings.osc1Freq);
     osc1.setRampUpSpeed(settings.osc1rampUpSpeedSeconds);
     osc1.setGain(settings.osc1Gain);
+
+    rampUpTime = settings.osc1rampUpSpeedSeconds * static_cast<int>(sampleRate); // For state changing timing
+
+    // just for testing
+    dummyHoldFrequency = settings.osc1Freq;
 }
 
 void OscManager::setOscillatorsState(State newState)
