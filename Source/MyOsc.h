@@ -29,7 +29,6 @@ public:
 
         auto numSamples = outputBlock.getNumSamples();
         auto numChannels = outputBlock.getNumChannels();
-        //auto inputChannels = inBlock.getNumChannels();
         auto* buffer = outputBlock.getChannelPointer(0);
         maintone.setFrequency(targetPitch);
         
@@ -38,7 +37,6 @@ public:
         case IDLE:
             currentGain = 0.0f;
             updateGain();
-            //DBG("current gain in process = " << currentGain);
             break;
         case RAMP_UP:
 
@@ -52,10 +50,21 @@ public:
         case HOLD_NOTE:
             for (size_t i = 0; i < numSamples; ++i)
             {
-                buffer[i] += maintone.processSample(0) * targetGain; //* lfo gain
+                buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain
+                if (!bypassPitchLfo)
+                {
+                    maintone.setFrequency(targetPitch + (pitchLfo.processSample(0) * pitchLfoDepth));
+                }
+                currentGain = smoothedGain.getNextValue();
             }
             break;
         case NOTE_CHANGE:
+            for (size_t i = 0; i < numSamples; ++i)
+            {
+                //DBG("currentGain in process = " << currentGain);
+                buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain
+                currentGain = smoothedGain.getNextValue();
+            }
             break;
         default:
             break;
@@ -84,10 +93,13 @@ private:
 
     State currentState = IDLE;
     
-    juce::dsp::Oscillator<float> maintone;
     size_t lookupTableSize = 1024;
-
-    //juce::dsp::Oscillator<float> pitchlfo;
+    juce::dsp::Oscillator<float> maintone;
+    juce::dsp::Oscillator<float> pitchLfo;
+    float pitchLfoRate = 0.5f; // Rate in seconds
+    float pitchLfoDepth = 20.f; // range of Hz that pitch lfo affects (if note pitch is 440 and depth is 10, new pitch will be between 435 and 445)
+    bool bypassPitchLfo = true;
+    
     //juce::dsp::Oscillator<float> volumelfo;
 
 };

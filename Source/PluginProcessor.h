@@ -34,8 +34,8 @@ struct SynthVolumeParam
 {
     static constexpr auto id = "synthVolume";
     static constexpr auto name = "Synth Volume";
-    inline static const juce::NormalisableRange<float> range = { 0.0f, 1.0f };;
-    static constexpr float defaultValue = { 0.5f };
+    inline static const juce::NormalisableRange<float> range = { 0.0f, 1.0f };
+    static constexpr float defaultValue = { 0.04f };
 };
 
 struct SynthFrequencyParam

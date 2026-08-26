@@ -245,5 +245,5 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
     // Volume ramp up
     float rampUpSpeedMs = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
     settings.osc1rampUpSpeedSeconds = rampUpSpeedMs / 1000.00;
-    settings.osc1Gain = apvts.getRawParameterValue(SynthVolumeParam::id)->load();//static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
+    settings.osc1Gain = apvts.getRawParameterValue(SynthVolumeParam::id)->load();
 }

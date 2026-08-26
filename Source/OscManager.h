@@ -40,92 +40,85 @@ public:
             // Switch to Ramp up
             if (addFeedback)
             {
-                currentState = RAMP_UP;
-                setOscillatorsState(RAMP_UP); 
-                rampUpTimeCurrent = 0;
+                setRampUp();
             }
             break;
         case RAMP_UP:
             // Switch to idle
             if (!addFeedback)
             {
-                currentState = IDLE;
-                setOscillatorsState(IDLE);
+                setIdle();
                 break;
             }
 
             rampUpTimeCurrent += numSamples;
 
             // Switch to Hold Note
-            if (rampUpTimeCurrent > rampUpTime)
+            if (rampUpTimeCurrent >= rampUpTime)
             {
-                currentState = HOLD_NOTE;
-                setOscillatorsState(HOLD_NOTE);
-                holdTimeCurrent = 0;
+                setHoldNote();
                 break;
             }
             break;
         case HOLD_NOTE:
-            osc1.setFrequency(dummyHoldFrequency);
-
             // Switch to idle
             if (!addFeedback)
             {
-                currentState = IDLE;
-                setOscillatorsState(IDLE);
-                rampUpTimeCurrent = 0;
+                setIdle();
                 break;
             }
 
             holdTimeCurrent += numSamples; // May need to go after next if statement
 
             // Switch to Note Change
-            //if (holdTimeCurrent > holdTime)
-            //{
-            //    currentState = NOTE_CHANGE;
-            //    setOscillatorsState(NOTE_CHANGE);
-            //    noteChangeTimeCurrent = 0;
-            //}
+            if (holdTimeCurrent >= holdTime)
+            {
+                setNoteChange();
+                break;
+            }
             break;
         case NOTE_CHANGE:
-            //osc1.setFrequency(dummyTestFrequency);
-            //dummyTestFrequency += 50.0;
+            // Switch to idle
+            if (!addFeedback)
+            {
+                setIdle();
+                break;
+            }
 
-            //// Switch to idle
-            //if (!addFeedback)
-            //{
-            //    currentState = IDLE;
-            //    setOscillatorsState(IDLE);
-            //}
+            noteChangeTimeCurrent += numSamples;
 
-            //noteChangeTimeCurrent += numSamples;
-
-            //// Switch to Hold Note
-            //if (noteChangeTimeCurrent >= noteChangeTime)
-            //{
-            //    currentState = HOLD_NOTE;
-            //    setOscillatorsState(HOLD_NOTE);
-            //    holdTimeCurrent = 0;
-            //}
+            // Switch to Hold Note
+            if (noteChangeTimeCurrent >= noteChangeTime)
+            {
+                setHoldNote();
+            }           
             break;
         default:
             break;
         }
 
         osc1.process(context);
+        osc2.process(context);
     }
 
     void updateSettings(const ParamSettings& settings);
     void setOscillatorsState(State state);
-
+    void setIdle();
+    void setRampUp();
+    void setHoldNote();
+    void setNoteChange();
  
 private:
     double sampleRate;
     int samplesPerBlock;
     int numSamples = 0;
     
-    MyOsc osc1;
+    std::vector<MyOsc> oscs;
+    MyOsc osc1, osc2;
+    float osc1Gain = 0.0f;
+    float osc2Gain = 0.0f;
 
+    bool secondNote = false;
     bool addFeedback = false;
     
     State currentState = IDLE;
@@ -133,12 +126,11 @@ private:
     int rampUpTime = 0;
     int rampUpTimeCurrent = 0; //(increment in samples)
 
-    int holdTime = 2 * static_cast<int>(sampleRate);
-    int holdTimeCurrent; //(increments in samples)
+    int holdTime; // set in prepare bc needs sample rate (needs to be updated when these are parameters)
+    int holdTimeCurrent = 0; //(increments in samples)
 
-    int noteChangeTime = 2 * static_cast<int>(sampleRate);
+    int noteChangeTime; // set in prepare bc needs sample rate (needs to be updated when these are parameters)
     int noteChangeTimeCurrent = 0; //(increments in samples)
-    float dummyTestFrequency = 500.0f;
-    float dummyHoldFrequency = 440.0f;
+
     int debugcounter = 0;
 };

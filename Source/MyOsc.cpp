@@ -14,6 +14,7 @@
 MyOsc::MyOsc()
 {
     maintone.initialise([](float x) {return sin(x);}, lookupTableSize);
+    pitchLfo.initialise([](float x) {return 0.5 * sin(x);}, lookupTableSize);
 }
 
 MyOsc::~MyOsc()
@@ -28,6 +29,9 @@ void MyOsc::prepare(const juce::dsp::ProcessSpec& spec)
 
     maintone.prepare(spec);
     maintone.setFrequency(440.0f);
+
+    pitchLfo.prepare(spec);
+    pitchLfo.setFrequency(pitchLfoRate);
 }
 
 void MyOsc::setFrequency(float newFrequency)
@@ -41,7 +45,7 @@ void MyOsc::setGain(float newGain) // Used for OscManager to set
     {
         targetGain = newGain;
         smoothedGain.reset(sampleRate, rampUpSpeed);
-        smoothedGain.setCurrentAndTargetValue(0.0001f);
+        smoothedGain.setCurrentAndTargetValue(currentGain);
         smoothedGain.setTargetValue(targetGain);
     }
 }
@@ -55,7 +59,7 @@ void MyOsc::updateGain() // Used to reset smoothed gain when in idle state
 
 void MyOsc::setRampUpSpeed(float newRampUpSpeed)
 {
-    if (newRampUpSpeed != rampUpSpeed) // prevent reseting when settings are constanly updated
+    if (newRampUpSpeed != rampUpSpeed) // prevent reseting since settings are constanly updated
     {
         rampUpSpeed = static_cast<double>(newRampUpSpeed);
         smoothedGain.reset(sampleRate, rampUpSpeed);
