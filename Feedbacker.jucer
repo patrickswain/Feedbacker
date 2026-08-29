@@ -3,6 +3,12 @@
 <JUCERPROJECT id="NeH6eo" name="Feedbacker" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
   <MAINGROUP id="PUTjRd" name="Feedbacker">
+    <GROUP id="{D49AFF09-2814-B1CF-F9A1-0720D38593C4}" name="Tests">
+      <FILE id="gOH072" name="RampingValuesTest.cpp" compile="1" resource="0"
+            file="Source/RampingValuesTest.cpp"/>
+      <FILE id="md5Ob6" name="RampingValuesTest.h" compile="0" resource="0"
+            file="Source/RampingValuesTest.h"/>
+    </GROUP>
     <GROUP id="{5BBD398A-553D-830C-1A07-0D2CF0FB5B8A}" name="Source">
       <FILE id="JyIrf0" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
@@ -17,6 +23,9 @@
     <FILE id="TPylc3" name="OscManager.cpp" compile="1" resource="0" file="Source/OscManager.cpp"/>
     <FILE id="g3uMDd" name="OscManager.h" compile="0" resource="0" file="Source/OscManager.h"/>
     <FILE id="AEQuvg" name="ParamSettings.h" compile="0" resource="0" file="Source/ParamSettings.h"/>
+    <FILE id="zBkXnb" name="RampingValues.cpp" compile="1" resource="0"
+          file="Source/RampingValues.cpp"/>
+    <FILE id="PgzbVL" name="RampingValues.h" compile="0" resource="0" file="Source/RampingValues.h"/>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

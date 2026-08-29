@@ -90,12 +90,12 @@ void OscManager::setNoteChange()
     noteChangeTimeCurrent = 0;
     if (secondNote) // replace this with reading from files
     {
+        // noteChangeTime = 
         osc1.setRampUpSpeed(noteChangeTime);
         osc1.setGain(osc1Gain);
 
         osc2.setRampUpSpeed(noteChangeTime);
         osc2.setGain(osc1Gain / 10);
-
     }
     else
     {

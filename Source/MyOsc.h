@@ -30,7 +30,6 @@ public:
         auto numSamples = outputBlock.getNumSamples();
         auto numChannels = outputBlock.getNumChannels();
         auto* buffer = outputBlock.getChannelPointer(0);
-        maintone.setFrequency(targetPitch);
         
         switch (currentState)
         {
@@ -42,7 +41,6 @@ public:
 
             for (size_t i = 0; i < numSamples; ++i)
             {
-                //DBG("currentGain in process = " << currentGain);
                 buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain
                 currentGain = smoothedGain.getNextValue();
             }
@@ -51,18 +49,18 @@ public:
             for (size_t i = 0; i < numSamples; ++i)
             {
                 buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain
-                if (!bypassPitchLfo)
-                {
-                    maintone.setFrequency(targetPitch + (pitchLfo.processSample(0) * pitchLfoDepth));
-                }
                 currentGain = smoothedGain.getNextValue();
+                //if (!bypassPitchLfo)
+                //{
+                //    maintone.setFrequency(targetPitch + (pitchLfo.processSample(0) * pitchLfoDepth));
+                //}
+                
             }
             break;
         case NOTE_CHANGE:
             for (size_t i = 0; i < numSamples; ++i)
-            {
-                //DBG("currentGain in process = " << currentGain);
-                buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain
+            {             
+                buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain  
                 currentGain = smoothedGain.getNextValue();
             }
             break;
@@ -89,7 +87,7 @@ private:
     double rampUpSpeed = 0.0; // Set from osc manager
     float currentGain = 0.0f;
     float targetGain = 0.0f;
-    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Multiplicative> smoothedGain;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedGain;
 
     State currentState = IDLE;
     

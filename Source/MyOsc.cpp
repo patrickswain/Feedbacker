@@ -36,7 +36,11 @@ void MyOsc::prepare(const juce::dsp::ProcessSpec& spec)
 
 void MyOsc::setFrequency(float newFrequency)
 {
-    targetPitch = newFrequency;
+    if (newFrequency != targetPitch)
+    {
+        targetPitch = newFrequency;
+        maintone.setFrequency(targetPitch);
+    }
 }
 
 void MyOsc::setGain(float newGain) // Used for OscManager to set
@@ -44,7 +48,7 @@ void MyOsc::setGain(float newGain) // Used for OscManager to set
     if (newGain != targetGain) // revent reseting when settings are constanly updated
     {
         targetGain = newGain;
-        smoothedGain.reset(sampleRate, rampUpSpeed);
+        //smoothedGain.reset(sampleRate, rampUpSpeed);
         smoothedGain.setCurrentAndTargetValue(currentGain);
         smoothedGain.setTargetValue(targetGain);
     }
