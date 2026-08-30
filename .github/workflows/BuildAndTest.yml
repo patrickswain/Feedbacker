@@ -20,7 +20,7 @@ jobs:
         run: cmake --build build --target UnitTestApp --config Release
 
       - name: Run Tests
-        run: /build/UnitTestApp_artefacts/Release/UnitTestApp
+        run: ./build/UnitTestApp_artefacts/Release/UnitTestApp
 
   build-windows:
     runs-on: windows-latest
