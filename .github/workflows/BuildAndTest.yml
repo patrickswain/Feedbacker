@@ -6,6 +6,10 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
+      - uses: actions/checkout@v4
+        with: 
+          submodules: recursive
+   
       - name: Configure
         run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
         
