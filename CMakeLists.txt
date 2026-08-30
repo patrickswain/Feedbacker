@@ -8,21 +8,27 @@ set(LOCAL_JUCE_PATH "$ENV{HOME}/users/Patrick/documents/JUCE")
 
 if (NOT EXISTS ${LOCAL_JUCE_PATH})
     message(STATUS "JUCE download not found. Cloning from github.")
-    #include(FetchContent)
-    #FetchContent_Declare(
-    #    JUCE
-    #    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-     #   GIT_TAG 8.0.4
-    #    GIT_SHALLOW TRUE
-    #    GIT_PROGRESS TRUE
-    #    FIND_PACKAGE_ARGS 8.0.4 
-    #)
-    #FetchContent_MakeAvailable(JUCE)
+    include(FetchContent)
+    FetchContent_Declare(
+        JUCE
+        GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+        GIT_TAG 8.0.4
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+        FIND_PACKAGE_ARGS 8.0.4 
+    )
+    FetchContent_MakeAvailable(JUCE)
 else()
     message(STATUS "Local JUCE download found from ${LOCAL_JUCE_PATH}")
     set(JUCE_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(JUCE_BUILD_EXTRAS OFF CACHE BOOL "" FORCE)
     add_subdirectory(${LOCAL_JUCE_PATH} JUCE)
+endif()
+
+if(COMMAND juce_add_plugin)
+    message(STATUS "JUCE loaded successfully")
+else()
+    message(FATAL_ERROR "JUCE was not loaded")
 endif()
 
 #************** shared files used by app and unit tests *****************
@@ -42,26 +48,19 @@ target_link_libraries(SharedFiles
         juce::juce_dsp
 )
 
-#juce_generate_juce_header(SharedFiles)
 #************** Main App *****************
 juce_add_plugin(Feedbacker
-    # VERSION ...                               # Set this if the plugin version is different to the project version
-    # ICON_BIG ...                              # ICON_* arguments specify a path to an image file to use as an icon for the Standalone
-    # ICON_SMALL ...
-    # COMPANY_NAME ...                          # Specify the name of the plugin's author
-    IS_SYNTH FALSE                       # Is this a synth or an effect?
-    NEEDS_MIDI_INPUT FALSE               # Does the plugin need midi input?
-    NEEDS_MIDI_OUTPUT FALSE              # Does the plugin need midi output?
-    IS_MIDI_EFFECT FALSE                 # Is this plugin a MIDI effect?
-    # EDITOR_WANTS_KEYBOARD_FOCUS TRUE/FALSE    # Does the editor need keyboard focus?
-    # COPY_PLUGIN_AFTER_BUILD TRUE/FALSE        # Should the plugin be installed to a default location after building?
-    PLUGIN_MANUFACTURER_CODE Patr               # A four-character manufacturer id with at least one upper-case character
-    PLUGIN_CODE cOde                            # A unique four-character plugin id with exactly one upper-case character
-                                                # GarageBand 10.3 requires the first letter to be upper-case, and the remaining letters to be lower-case
-    FORMATS AU VST3 Standalone                  # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
-    PRODUCT_NAME "Feedbacker"         # The name of the final executable, which can differ from the target name
-    NEEDS_WEB_BROWSER FALSE                     # Set to TRUE if you need to use webviews
-    NEEDS_CURL FALSE)                           # Set to TRUE if you need to use curl
+    COMPANY_NAME "A company's name"
+    NEEDS_MIDI_INPUT FALSE               
+    NEEDS_MIDI_OUTPUT FALSE              
+    IS_MIDI_EFFECT FALSE                 
+    PLUGIN_MANUFACTURER_CODE Nam3               
+    PLUGIN_CODE Cod3                                                                          
+    FORMATS VST3 Standalone   #AU              
+    PRODUCT_NAME "Name"         
+    NEEDS_WEB_BROWSER FALSE                     
+    NEEDS_CURL FALSE
+)                           
 
 
 #juce_generate_juce_header(Feedbacker)
@@ -94,8 +93,6 @@ target_link_libraries(Feedbacker
 juce_add_console_app(UnitTestApp
     PRODUCT_NAME "UnitTestApp"
 )
-
-#juce_generate_juce_header(UnitTestApp)
 
 target_sources(UnitTestApp PRIVATE
     Tests/Main.cpp
