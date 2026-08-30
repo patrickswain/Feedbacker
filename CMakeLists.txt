@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.22)
 
 project(FEEDBACKER VERSION 0.0.1)
 
-
 #************** Download juce if needed *****************
 set(LOCAL_JUCE_PATH "$ENV{HOME}/users/Patrick/documents/JUCE")
 
@@ -49,6 +48,12 @@ target_link_libraries(SharedFiles
 )
 
 #************** Main App *****************
+if(APPLE)
+    set(PLUGIN_FORMATS AU VST3 Standalone)
+else()
+    set(PLUGIN_FORMATS VST3 Standalone)
+endif()
+
 juce_add_plugin(Feedbacker
     COMPANY_NAME "A company's name"
     NEEDS_MIDI_INPUT FALSE               
@@ -56,8 +61,8 @@ juce_add_plugin(Feedbacker
     IS_MIDI_EFFECT FALSE                 
     PLUGIN_MANUFACTURER_CODE Nam3               
     PLUGIN_CODE Cod3                                                                          
-    FORMATS VST3 Standalone   #AU              
-    PRODUCT_NAME "Name"         
+    FORMATS ${PLUGIN_FORMATS}        
+    PRODUCT_NAME "Feedbacker"         
     NEEDS_WEB_BROWSER FALSE                     
     NEEDS_CURL FALSE
 )                           
