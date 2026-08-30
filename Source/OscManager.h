@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include <JuceHeader.h>
 #include "MyOsc.h"
 #include "ParamSettings.h"
 
@@ -49,9 +48,7 @@ public:
             {
                 setIdle();
                 break;
-            }
-
-            rampUpTimeCurrent += numSamples;
+            }            
 
             // Switch to Hold Note
             if (rampUpTimeCurrent >= rampUpTime)
@@ -59,6 +56,9 @@ public:
                 setHoldNote();
                 break;
             }
+
+            rampUpTimeCurrent += numSamples;
+
             break;
         case HOLD_NOTE:
             // Switch to idle
@@ -66,9 +66,7 @@ public:
             {
                 setIdle();
                 break;
-            }
-
-            holdTimeCurrent += numSamples; // May need to go after next if statement
+            }            
 
             // Switch to Note Change
             if (holdTimeCurrent >= holdTime)
@@ -76,6 +74,8 @@ public:
                 setNoteChange();
                 break;
             }
+
+            holdTimeCurrent += numSamples; // May need to go after next if statement
             break;
         case NOTE_CHANGE:
             // Switch to idle
@@ -85,20 +85,20 @@ public:
                 break;
             }
 
-            noteChangeTimeCurrent += numSamples;
-
             // Switch to Hold Note
             if (noteChangeTimeCurrent >= noteChangeTime)
             {
                 setHoldNote();
             }           
+
+            noteChangeTimeCurrent += numSamples;
             break;
         default:
             break;
         }
 
         osc1.process(context);
-        osc2.process(context);
+        //osc2.process(context);
     }
 
     void updateSettings(const ParamSettings& settings);

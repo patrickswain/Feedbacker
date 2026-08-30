@@ -7,7 +7,8 @@
 
   ==============================================================================
 */
-
+#include <cmath>
+#include <juce_core/juce_core.h>
 #include "RampingValues.h"
 
 void RampingValues::setGainAndSpeed(float newStartingGain, float newTargetGain, float rampUpSpeedInSamples)

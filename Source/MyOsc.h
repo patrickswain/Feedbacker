@@ -10,8 +10,9 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_dsp/juce_dsp.h>
 #include "ParamSettings.h"
+#include "RampingValues.h"
 
 class MyOsc
 {   
@@ -35,21 +36,22 @@ public:
         {
         case IDLE:
             currentGain = 0.0f;
-            updateGain();
+            //updateGain(); // maybe remove this
             break;
         case RAMP_UP:
 
             for (size_t i = 0; i < numSamples; ++i)
             {
-                buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain
-                currentGain = smoothedGain.getNextValue();
+                currentGain = rv.getNextValue();
+                buffer[i] += maintone.processSample(0) * currentGain;//currentGain; //* lfo gain
+                //currentGain = smoothedGain.getNextValue();
             }
             break;
         case HOLD_NOTE:
             for (size_t i = 0; i < numSamples; ++i)
             {
-                buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain
-                currentGain = smoothedGain.getNextValue();
+                currentGain = rv.getNextValue();
+                buffer[i] += maintone.processSample(0) * currentGain;
                 //if (!bypassPitchLfo)
                 //{
                 //    maintone.setFrequency(targetPitch + (pitchLfo.processSample(0) * pitchLfoDepth));
@@ -60,8 +62,8 @@ public:
         case NOTE_CHANGE:
             for (size_t i = 0; i < numSamples; ++i)
             {             
-                buffer[i] += maintone.processSample(0) * currentGain; //* lfo gain  
-                currentGain = smoothedGain.getNextValue();
+                currentGain = rv.getNextValue();
+                buffer[i] += maintone.processSample(0) * currentGain;
             }
             break;
         default:
@@ -87,7 +89,8 @@ private:
     double rampUpSpeed = 0.0; // Set from osc manager
     float currentGain = 0.0f;
     float targetGain = 0.0f;
-    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedGain;
+    //juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedGain;
+    RampingValues rv;
 
     State currentState = IDLE;
     

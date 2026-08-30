@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.22)
 
 project(FEEDBACKER VERSION 0.0.1)
 
+
+#************** Download juce if needed *****************
 set(LOCAL_JUCE_PATH "$ENV{HOME}/users/Patrick/documents/JUCE")
 
 if (NOT EXISTS ${LOCAL_JUCE_PATH})
@@ -23,6 +25,25 @@ else()
     add_subdirectory(${LOCAL_JUCE_PATH} JUCE)
 endif()
 
+#************** shared files used by app and unit tests *****************
+add_library(SharedFiles STATIC
+    Source/RampingValues.cpp
+)
+
+target_include_directories(SharedFiles PUBLIC Source)
+
+target_link_libraries(SharedFiles
+    PUBLIC
+        juce::juce_audio_basics
+        juce::juce_audio_devices
+        juce::juce_audio_utils
+        juce::juce_core
+        juce::juce_data_structures
+        juce::juce_dsp
+)
+
+#juce_generate_juce_header(SharedFiles)
+#************** Main App *****************
 juce_add_plugin(Feedbacker
     # VERSION ...                               # Set this if the plugin version is different to the project version
     # ICON_BIG ...                              # ICON_* arguments specify a path to an image file to use as an icon for the Standalone
@@ -43,15 +64,14 @@ juce_add_plugin(Feedbacker
     NEEDS_CURL FALSE)                           # Set to TRUE if you need to use curl
 
 
-juce_generate_juce_header(Feedbacker)
+#juce_generate_juce_header(Feedbacker)
 
 target_sources(Feedbacker
     PRIVATE
         Source/PluginEditor.cpp
         Source/PluginProcessor.cpp
         Source/MyOsc.cpp
-        Source/OscManager.cpp
-        Source/RampingValues.cpp
+        Source/OscManager.cpp        
 )
 
 
@@ -64,13 +84,31 @@ target_compile_definitions(Feedbacker
 
 target_link_libraries(Feedbacker
     PRIVATE
-        juce::juce_audio_basics
-        juce::juce_audio_devices
-        juce::juce_audio_utils
-        juce::juce_core
-        juce::juce_data_structures
-        juce::juce_dsp
+        SharedFiles
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
+
+#************** Console app for unit tests *****************
+juce_add_console_app(UnitTestApp
+    PRODUCT_NAME "UnitTestApp"
+)
+
+#juce_generate_juce_header(UnitTestApp)
+
+target_sources(UnitTestApp PRIVATE
+    Tests/Main.cpp
+    Tests/RampingValuesTest.cpp
+)
+
+target_link_libraries(UnitTestApp 
+    PRIVATE
+        SharedFiles
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_warning_flags
+)
+
+enable_testing()
+add_test(NAME UnitTestApp COMMAND UnitTestApp)

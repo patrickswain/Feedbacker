@@ -53,7 +53,7 @@ void OscManager::updateSettings(const ParamSettings& settings)
     
     rampUpTime = settings.osc1rampUpSpeedSeconds * static_cast<int>(sampleRate); // For state changing timing
     holdTime = 2 * static_cast<int>(sampleRate);
-    noteChangeTime = 2 * static_cast<int>(sampleRate);
+    noteChangeTime = 5 * static_cast<int>(sampleRate);
 
 }
 
