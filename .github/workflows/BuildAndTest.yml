@@ -1,0 +1,39 @@
+name: Build and Test Project
+
+on: [push, pull_request]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Configure
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+        
+      - name: Build
+        run: cmake --build build --target Feedbacker --config Relase
+          
+      - name: Build Tests
+        run: cmake --build build --target UnitTestApp --config Release
+
+      - name: Run Tests
+        run: /build/UnitTestApp_artefacts/Release/UnitTestApp
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Configure
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+        
+      - name: Build
+        run: cmake --build build --target Feedbacker --config Relase
+          
+      - name: Build Tests
+        run: cmake --build build --target UnitTestApp --config Release
+
+      - name: Run Tests
+        run: .\build\UnitTestApp_artefacts\Release\UnitTestApp.exe
+        shell: pwsh
