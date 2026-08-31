@@ -25,13 +25,13 @@ public:
     void process(const ProcessContext& context)
     {
         
-        if (debugcounter % 20) // limit dbg writes
-        {
-            std::string af = addFeedback ? "true" : "false";
-            DBG("State in manager = " << currentState);
-            DBG("addFeedback in manager = " << af);
-        }
-        debugcounter++;
+        //if (debugcounter % 20) // limit dbg writes
+        //{
+        //    std::string af = addFeedback ? "true" : "false";
+        //    DBG("State in manager = " << currentState);
+        //    DBG("addFeedback in manager = " << af);
+        //}
+        //debugcounter++;
 
         switch (currentState)
         {
@@ -98,7 +98,7 @@ public:
         }
 
         osc1.process(context);
-        //osc2.process(context);
+        osc2.process(context);
     }
 
     void updateSettings(const ParamSettings& settings);

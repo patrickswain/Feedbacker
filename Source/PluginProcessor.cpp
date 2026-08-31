@@ -161,7 +161,13 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         float rmsLevel = buffer.getRMSLevel(channel, 0, numSamples);
         rmsLevel = juce::Decibels::gainToDecibels(rmsLevel);
-        if (rmsLevel < triggerThreshold)
+
+        if (rmsLevel > decibelsBeforeFeedbackStarts) // prevents processing before guitar plays
+        {
+            firstNoteWasPlayed = true;
+        }
+
+        if ((rmsLevel < triggerThreshold) && (firstNoteWasPlayed))
         {
             settings.addFeedback = true;
         }

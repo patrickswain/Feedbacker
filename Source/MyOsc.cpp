@@ -32,6 +32,8 @@ void MyOsc::prepare(const juce::dsp::ProcessSpec& spec)
 
     pitchLfo.prepare(spec);
     pitchLfo.setFrequency(pitchLfoRate);
+
+    rv.setRampingType(RampingValues::RampType::Linear);
 }
 
 void MyOsc::setFrequency(float newFrequency)
@@ -47,20 +49,14 @@ void MyOsc::setGain(float newGain) // Used for OscManager to set
 {
     if (newGain != targetGain) // revent reseting when settings are constanly updated
     {
+        DBG("setGain: current gain = " << currentGain << ", oldTarget = " << targetGain << ", new target = " << newGain);
+
         targetGain = newGain;
         //smoothedGain.reset(sampleRate, rampUpSpeed);
         //smoothedGain.setCurrentAndTargetValue(currentGain);
         //smoothedGain.setTargetValue(targetGain);
         rv.setGainAndSpeed(currentGain, targetGain, rampUpSpeed);
     }
-}
-
-void MyOsc::updateGain() // Used to reset smoothed gain when in idle state
-{    
-        //smoothedGain.reset(sampleRate, rampUpSpeed);
-        //smoothedGain.setCurrentAndTargetValue(0.0001f);
-        //smoothedGain.setTargetValue(targetGain);    
-    rv.setGainAndSpeed(0.0f, targetGain, rampUpSpeed);
 }
 
 void MyOsc::setRampUpSpeed(float newRampUpSpeed)

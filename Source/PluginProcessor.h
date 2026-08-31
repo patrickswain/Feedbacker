@@ -17,7 +17,7 @@ struct TriggerThresholdParam
 {
     static constexpr auto id = "triggerThreshold";
     static constexpr auto name = "Trigger Threshold (db)";
-    inline static const juce::NormalisableRange<float> range = { -100.0f, 0.0f };
+    inline static const juce::NormalisableRange<float> range = { -100.0f, -5.0f };
     static constexpr float defaultValue = { -95.0f };
 };
 
@@ -33,7 +33,7 @@ struct SynthVolumeParam
 {
     static constexpr auto id = "synthVolume";
     static constexpr auto name = "Synth Volume";
-    inline static const juce::NormalisableRange<float> range = { 0.0f, 1.0f };
+    inline static const juce::NormalisableRange<float> range = { 0.0f, 0.80f };
     static constexpr float defaultValue = { 0.04f };
 };
 
@@ -102,7 +102,8 @@ private:
     OscManager oscManager;
     
     float triggerThreshold = 0.0f;
-
+    float decibelsBeforeFeedbackStarts = -50.0f;
+    bool firstNoteWasPlayed = false;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FeedbackerAudioProcessor)
 };

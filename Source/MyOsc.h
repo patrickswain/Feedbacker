@@ -36,7 +36,6 @@ public:
         {
         case IDLE:
             currentGain = 0.0f;
-            //updateGain(); // maybe remove this
             break;
         case RAMP_UP:
 
@@ -44,6 +43,13 @@ public:
             {
                 currentGain = rv.getNextValue();
                 buffer[i] += maintone.processSample(0) * currentGain;//currentGain; //* lfo gain
+
+                float gainDifference = std::abs(currentGain - previousGain);
+                if (gainDifference > 0.001f)
+                {
+                    DBG("Gain difference = " << gainDifference << ". Previous Gain = " << previousGain << ". Current Gain = " << currentGain);
+                }
+                previousGain = currentGain;
                 //currentGain = smoothedGain.getNextValue();
             }
             break;
@@ -74,7 +80,6 @@ public:
 
     void setFrequency(float newFrequency);
     void setGain(float newGain);
-    void updateGain();
     void setRampUpSpeed(float newSpeed);
     void setState(State newState);
 
@@ -89,6 +94,7 @@ private:
     double rampUpSpeed = 0.0; // Set from osc manager
     float currentGain = 0.0f;
     float targetGain = 0.0f;
+    float previousGain = 0.0f;
     //juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedGain;
     RampingValues rv;
 

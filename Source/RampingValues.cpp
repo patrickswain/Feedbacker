@@ -11,6 +11,11 @@
 #include <juce_core/juce_core.h>
 #include "RampingValues.h"
 
+void RampingValues::setRampingType(RampType type)
+{
+    rampType = type;
+}
+
 void RampingValues::setGainAndSpeed(float newStartingGain, float newTargetGain, float rampUpSpeedInSamples)
 {
     // difference in gain = amplitude of hann function
@@ -44,6 +49,13 @@ float RampingValues::getNextValue()
 
     // cos amplitude is double, so have to half the difference of the two gains, and shift the starting point up by half of the distance
     // dont need extra expression for ramping down bc gaindiff will be negative
-    return (startingGain + (targetGain - startingGain) * 0.5f * (1.0f - std::cos((2 * juce::MathConstants<float>::pi * currentStep++) / (2 * totalSteps))));
+    if (rampType == HannFunction)
+    {
+        return (startingGain + (targetGain - startingGain) * 0.5f * (1.0f - std::cos((2 * juce::MathConstants<float>::pi * currentStep++) / (2 * totalSteps))));
+    }
+    else // linear
+    {
+        return (((targetGain - startingGain) / totalSteps) * currentStep++) + startingGain;
+    }
     
 }

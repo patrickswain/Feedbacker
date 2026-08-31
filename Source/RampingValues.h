@@ -14,6 +14,12 @@
 class RampingValues
 {
 public:
+    enum RampType
+    {
+        HannFunction,
+        Linear
+    };
+    void setRampingType(RampType type);
     void setGainAndSpeed(float currentGain, float targetGain, float rampUpSpeedInSamples);    
     float getNextValue();
 
@@ -24,4 +30,5 @@ private:
     float targetGain = 0.0f;
     int currentStep = 0;
     int totalSteps = 0;
+    RampType rampType = Linear;
 };
