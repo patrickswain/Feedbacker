@@ -38,21 +38,21 @@ void OscManager::updateSettings(const ParamSettings& settings)
     addFeedback = settings.addFeedback;
 
     osc1.setFrequency(settings.osc1Freq);
-    osc1.setRampUpSpeed(settings.osc1rampUpSpeedSeconds);
+    osc1.setRampUpSpeed(settings.rampUpSpeed);
 
     osc2.setFrequency(settings.osc1Freq + 461.0f);
-    osc2.setRampUpSpeed(settings.osc1rampUpSpeedSeconds);
+    osc2.setRampUpSpeed(settings.rampUpSpeed);
 
-    if (osc1Gain != settings.osc1Gain) // prevent resetting values during note change
+    if (osc1Gain != settings.gain) // prevent resetting values during note change
     {
         DBG("Set from updateSettings");
-        osc1.setGain(settings.osc1Gain);
+        osc1.setGain(settings.gain);
         osc2.setGain(osc1Gain * juce::Decibels::decibelsToGain(-18.0f));
-        osc1Gain = settings.osc1Gain;
+        osc1Gain = settings.gain;
     }
 
     
-    rampUpTime = settings.osc1rampUpSpeedSeconds * static_cast<int>(sampleRate); // For state changing timing
+    rampUpTime = settings.rampUpSpeed * static_cast<int>(sampleRate); // For state changing timing
     holdTime = 1 * static_cast<int>(sampleRate);
     noteChangeTime = 2 * static_cast<int>(sampleRate);
 

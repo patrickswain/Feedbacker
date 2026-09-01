@@ -232,25 +232,40 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
+    // Global
     layout.add(std::make_unique<juce::AudioParameterFloat>(TriggerThresholdParam::id, TriggerThresholdParam::name, TriggerThresholdParam::range, TriggerThresholdParam::defaultValue));    
     layout.add(std::make_unique<juce::AudioParameterFloat>(SynthVolumeParam::id, SynthVolumeParam::name, SynthVolumeParam::range, SynthVolumeParam::defaultValue));
     layout.add(std::make_unique<juce::AudioParameterFloat>(RampUpSpeedParam::id, RampUpSpeedParam::name, RampUpSpeedParam::range, RampUpSpeedParam::defaultValue));
-    layout.add(std::make_unique<juce::AudioParameterFloat>(SynthFrequencyParam::id, SynthFrequencyParam::name, SynthFrequencyParam::range, SynthFrequencyParam::defaultValue));
+    // Frequencies
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc1FrequencyParam::id, Osc1FrequencyParam::name, Osc1FrequencyParam::range, Osc1FrequencyParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc2FrequencyParam::id, Osc2FrequencyParam::name, Osc2FrequencyParam::range, Osc2FrequencyParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc3FrequencyParam::id, Osc3FrequencyParam::name, Osc3FrequencyParam::range, Osc3FrequencyParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc4FrequencyParam::id, Osc4FrequencyParam::name, Osc4FrequencyParam::range, Osc4FrequencyParam::defaultValue));
+    //Hold times
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc1HoldTimeParam::id, Osc1HoldTimeParam::name, Osc1HoldTimeParam::range, Osc1HoldTimeParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc2HoldTimeParam::id, Osc2HoldTimeParam::name, Osc2HoldTimeParam::range, Osc2HoldTimeParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc3HoldTimeParam::id, Osc3HoldTimeParam::name, Osc3HoldTimeParam::range, Osc3HoldTimeParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc4HoldTimeParam::id, Osc4HoldTimeParam::name, Osc4HoldTimeParam::range, Osc4HoldTimeParam::defaultValue));
+    //Bypasses
+    layout.add(std::make_unique<juce::AudioParameterBool>(Osc1BypassParam::id, Osc1BypassParam::name, Osc1BypassParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterBool>(Osc2BypassParam::id, Osc2BypassParam::name, Osc2BypassParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterBool>(Osc3BypassParam::id, Osc3BypassParam::name, Osc3BypassParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterBool>(Osc4BypassParam::id, Osc4BypassParam::name, Osc4BypassParam::defaultValue));
 
     return layout;
 }
 
 void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeState& apvts)
 {
-
     // Feedback on/off logic
     triggerThreshold = apvts.getRawParameterValue(TriggerThresholdParam::id)->load();
-    
-    // Note choice
-    settings.osc1Freq = apvts.getRawParameterValue(SynthFrequencyParam::id)->load();
 
     // Volume ramp up
     float rampUpSpeedMs = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
-    settings.osc1rampUpSpeedSeconds = rampUpSpeedMs / 1000.00;
-    settings.osc1Gain = apvts.getRawParameterValue(SynthVolumeParam::id)->load();
+    settings.rampUpSpeed = rampUpSpeedMs / 1000.00;
+    settings.gain = apvts.getRawParameterValue(SynthVolumeParam::id)->load();
+
+    // Note choice
+    settings.osc1Freq = apvts.getRawParameterValue(Osc1FrequencyParam::id)->load();
+
 }
