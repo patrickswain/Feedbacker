@@ -103,7 +103,7 @@ private:
     
     float triggerThreshold = 0.0f;
     float decibelsBeforeFeedbackStarts = -50.0f;
-    bool firstNoteWasPlayed = false;
+    bool firstNoteWasPlayed = true;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FeedbackerAudioProcessor)
 };

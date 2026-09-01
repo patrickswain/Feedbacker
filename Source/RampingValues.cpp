@@ -53,9 +53,26 @@ float RampingValues::getNextValue()
     {
         return (startingGain + (targetGain - startingGain) * 0.5f * (1.0f - std::cos((2 * juce::MathConstants<float>::pi * currentStep++) / (2 * totalSteps))));
     }
-    else // linear
+    else if (rampType == Linear) // linear
     {
         return (((targetGain - startingGain) / totalSteps) * currentStep++) + startingGain;
+    }
+    else if (rampType == DecibelLinear)
+    {
+        startingDB = juce::Decibels::gainToDecibels(startingGain);
+        targetDB = juce::Decibels::gainToDecibels(targetGain);
+        float result = (((targetDB - startingDB) / totalSteps) * currentStep++) + startingDB;
+        
+        return juce::Decibels::decibelsToGain(result);
+    }
+    else
+    {
+        startingDB = juce::Decibels::gainToDecibels(startingGain);
+        targetDB = juce::Decibels::gainToDecibels(targetGain);
+        float theta = (2 * juce::MathConstants<float>::pi * currentStep++) / 2 * totalSteps; // Maybe change total steps?
+        float temp = 0.5f * (1.0f - std::cos(theta));
+        float result = startingDB + (targetDB - startingDB) * theta;
+        return juce::Decibels::decibelsToGain(result);
     }
     
 }

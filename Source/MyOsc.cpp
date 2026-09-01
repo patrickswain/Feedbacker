@@ -15,6 +15,9 @@ MyOsc::MyOsc()
 {
     maintone.initialise([](float x) {return sin(x);}, lookupTableSize);
     pitchLfo.initialise([](float x) {return 0.5 * sin(x);}, lookupTableSize);
+
+    rv.setRampingType(RampingValues::RampType::DecibelLinear);
+
 }
 
 MyOsc::~MyOsc()
@@ -33,7 +36,6 @@ void MyOsc::prepare(const juce::dsp::ProcessSpec& spec)
     pitchLfo.prepare(spec);
     pitchLfo.setFrequency(pitchLfoRate);
 
-    rv.setRampingType(RampingValues::RampType::Linear);
 }
 
 void MyOsc::setFrequency(float newFrequency)
@@ -50,6 +52,7 @@ void MyOsc::setGain(float newGain) // Used for OscManager to set
     if (newGain != targetGain) // revent reseting when settings are constanly updated
     {
         DBG("setGain: current gain = " << currentGain << ", oldTarget = " << targetGain << ", new target = " << newGain);
+        DBG("Ramptime = " << rampUpSpeed);
 
         targetGain = newGain;
         //smoothedGain.reset(sampleRate, rampUpSpeed);
