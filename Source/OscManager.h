@@ -25,13 +25,13 @@ public:
     void process(const ProcessContext& context)
     {
         
-        if (debugcounter % 20) // limit dbg writes
-        {
-            //std::string af = addFeedback ? "true" : "false";
-            DBG("State in manager = " << currentState);
-            //DBG("addFeedback in manager = " << af);
-        }
-        debugcounter++;
+        //if (debugcounter % 20) // limit dbg writes
+        //{
+        //    //std::string af = addFeedback ? "true" : "false";
+        //    DBG("State in manager = " << currentState);
+        //    //DBG("addFeedback in manager = " << af);
+        //}
+        //debugcounter++;
 
         switch (currentState)
         {

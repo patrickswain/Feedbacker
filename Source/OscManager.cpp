@@ -36,7 +36,7 @@ void OscManager::prepare(const juce::dsp::ProcessSpec& spec)
 void OscManager::updateSettings(const ParamSettings& newSettings) 
 {
     rampUpTime = newSettings.rampUpSpeed;
-    holdTime = newSettings.osc1HoldTime;
+    //holdTime = newSettings.osc1HoldTime;
     noteChangeTime = newSettings.osc1NoteChangeTime;
 
     osc1.setFrequency(newSettings.osc1Freq);
@@ -95,6 +95,22 @@ void OscManager::setHoldNote()
     currentState = HOLD_NOTE;
     setOscillatorsState(HOLD_NOTE);
     holdTimeCurrent = 0;
+
+    switch (note)
+    {
+    case NOTE_1:
+        holdTime = settings.osc2HoldTime;
+        break;
+    case NOTE_2:
+        holdTime = settings.osc3HoldTime;
+        break;
+    case NOTE_3:
+        holdTime = settings.osc4HoldTime;
+        break;
+    case NOTE_4:
+        holdTime = settings.osc1HoldTime;
+        break;
+    }
 }
 
 void OscManager::updateOscillatorNoteChange(float rampTime, Note currentNote)
