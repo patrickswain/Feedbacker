@@ -262,10 +262,29 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
 
     // Volume ramp up
     float rampUpSpeedMs = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
-    settings.rampUpSpeed = rampUpSpeedMs / 1000.00;
+    settings.rampUpSpeed = (rampUpSpeedMs / 1000.00) * static_cast<float>(currentSampleRate);
     settings.gain = apvts.getRawParameterValue(SynthVolumeParam::id)->load();
 
     // Note choice
     settings.osc1Freq = apvts.getRawParameterValue(Osc1FrequencyParam::id)->load();
+    settings.osc2Freq = apvts.getRawParameterValue(Osc2FrequencyParam::id)->load();
+    settings.osc3Freq = apvts.getRawParameterValue(Osc3FrequencyParam::id)->load();
+    settings.osc4Freq = apvts.getRawParameterValue(Osc4FrequencyParam::id)->load();
+
+    // Bypass
+    settings.osc1Bypass = apvts.getRawParameterValue(Osc1BypassParam::id)->load();
+    settings.osc2Bypass = apvts.getRawParameterValue(Osc2BypassParam::id)->load();
+    settings.osc3Bypass = apvts.getRawParameterValue(Osc3BypassParam::id)->load();
+    settings.osc4Bypass = apvts.getRawParameterValue(Osc4BypassParam::id)->load();
+
+    // Hold times
+    settings.osc1HoldTime = apvts.getRawParameterValue(Osc1HoldTimeParam::id)->load() * static_cast<float>(currentSampleRate) / 1000.0f;
+    settings.osc2HoldTime = apvts.getRawParameterValue(Osc2HoldTimeParam::id)->load() * static_cast<float>(currentSampleRate) / 1000.0f;
+    settings.osc3HoldTime = apvts.getRawParameterValue(Osc3HoldTimeParam::id)->load() * static_cast<float>(currentSampleRate) / 1000.0f;
+    settings.osc4HoldTime = apvts.getRawParameterValue(Osc4HoldTimeParam::id)->load() * static_cast<float>(currentSampleRate) / 1000.0f;
+
+    // Note Change times
+    settings.osc1NoteChangeTime = settings.rampUpSpeed;
+
 
 }

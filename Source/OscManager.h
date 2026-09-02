@@ -25,26 +25,27 @@ public:
     void process(const ProcessContext& context)
     {
         
-        //if (debugcounter % 20) // limit dbg writes
-        //{
-        //    std::string af = addFeedback ? "true" : "false";
-        //    DBG("State in manager = " << currentState);
-        //    DBG("addFeedback in manager = " << af);
-        //}
-        //debugcounter++;
+        if (debugcounter % 20) // limit dbg writes
+        {
+            //std::string af = addFeedback ? "true" : "false";
+            DBG("State in manager = " << currentState);
+            //DBG("addFeedback in manager = " << af);
+        }
+        debugcounter++;
 
         switch (currentState)
         {
         case IDLE:
             // Switch to Ramp up
-            if (addFeedback)
+            if (settings.addFeedback)
             {
                 setRampUp();
+                break;
             }
             break;
         case RAMP_UP:
             // Switch to idle
-            if (!addFeedback)
+            if (!settings.addFeedback)
             {
                 setIdle();
                 break;
@@ -57,12 +58,12 @@ public:
                 break;
             }
 
-            rampUpTimeCurrent += numSamples;
+            rampUpTimeCurrent += settings.numSamples;
 
             break;
         case HOLD_NOTE:
             // Switch to idle
-            if (!addFeedback)
+            if (!settings.addFeedback)
             {
                 setIdle();
                 break;
@@ -74,12 +75,12 @@ public:
                 setNoteChange();
                 break;
             }
-
-            holdTimeCurrent += numSamples; // May need to go after next if statement
+            DBG("Hold time current = " << holdTimeCurrent << " . Total hold time = " << holdTime);
+            holdTimeCurrent += settings.numSamples; // May need to go after next if statement
             break;
         case NOTE_CHANGE:
             // Switch to idle
-            if (!addFeedback)
+            if (!settings.addFeedback)
             {
                 setIdle();
                 break;
@@ -89,48 +90,71 @@ public:
             if (noteChangeTimeCurrent >= noteChangeTime)
             {
                 setHoldNote();
+                break;
             }           
 
-            noteChangeTimeCurrent += numSamples;
+            noteChangeTimeCurrent += settings.numSamples;
             break;
         default:
             break;
         }
 
-        osc1.process(context);
-        osc2.process(context);
+        if (!settings.osc1Bypass)
+        {
+            osc1.process(context);
+        }
+        if (!settings.osc2Bypass)
+        {
+            osc2.process(context);
+        }
+        if (!settings.osc3Bypass)
+        {
+            osc3.process(context);
+        }
+        if (!settings.osc4Bypass)
+        {
+            osc4.process(context);
+        }
+        
     }
 
+    enum Note {
+        NOTE_1,
+        NOTE_2,
+        NOTE_3,
+        NOTE_4
+    };
     void updateSettings(const ParamSettings& settings);
     void setOscillatorsState(State state);
     void setIdle();
     void setRampUp();
     void setHoldNote();
     void setNoteChange();
- 
+    void updateOscillatorNoteChange(float rampTime, Note currentNote);
+    
 private:
+    
     double sampleRate;
     int samplesPerBlock;
-    int numSamples = 0;
     
-    std::vector<MyOsc> oscs;
-    MyOsc osc1, osc2;
-    float osc1Gain = 0.0f;
-    float osc2Gain = 0.0f;
+    MyOsc osc1, osc2, osc3, osc4;
+    std::array<MyOsc*, 4> oscs;
 
+    ParamSettings settings;
     bool secondNote = false;
-    bool addFeedback = false;
-    
+
     State currentState = IDLE;
-    
+    Note note = NOTE_1;
+
     int rampUpTime = 0;
-    int rampUpTimeCurrent = 0; //(increment in samples)
+    int rampUpTimeCurrent = 0;
 
-    int holdTime; // set in prepare bc needs sample rate (needs to be updated when these are parameters)
-    int holdTimeCurrent = 0; //(increments in samples)
+    int holdTime = 0;
+    int holdTimeCurrent = 0;
 
-    int noteChangeTime; // set in prepare bc needs sample rate (needs to be updated when these are parameters)
-    int noteChangeTimeCurrent = 0; //(increments in samples)
+    int noteChangeTime = 0;
+    int noteChangeTimeCurrent = 0;
+
 
     int debugcounter = 0;
 };

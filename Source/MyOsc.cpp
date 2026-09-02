@@ -55,9 +55,6 @@ void MyOsc::setGain(float newGain) // Used for OscManager to set
         DBG("Ramptime = " << rampUpSpeed);
 
         targetGain = newGain;
-        //smoothedGain.reset(sampleRate, rampUpSpeed);
-        //smoothedGain.setCurrentAndTargetValue(currentGain);
-        //smoothedGain.setTargetValue(targetGain);
         rv.setGainAndSpeed(currentGain, targetGain, rampUpSpeed);
     }
 }
