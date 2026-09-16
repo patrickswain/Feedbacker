@@ -75,7 +75,7 @@ public:
                 setNoteChange();
                 break;
             }
-            DBG("Hold time current = " << holdTimeCurrent << " . Total hold time = " << holdTime);
+            //DBG("Hold time current = " << holdTimeCurrent << " . Total hold time = " << holdTime);
             holdTimeCurrent += settings.numSamples; // May need to go after next if statement
             break;
         case NOTE_CHANGE:
