@@ -26,47 +26,66 @@ public:
     std::vector<juce::Component*> getComps();
 
 private:
+    struct OscillatorControls 
+    {
+        OscillatorControls(juce::AudioProcessorValueTreeState& apvts,
+            const juce::String& freqParamId,
+            const juce::String& holdTimeParamId,
+            const juce::String& bypassParamId,
+            const juce::String& noteLabel)
+            : freqSlider(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextBoxAbove),
+            holdTimeSlider(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextBoxAbove),
+            bypassButton("Bypass"),
+            freqSliderAttachment(apvts, freqParamId, freqSlider),
+            holdTimeSliderAttachment(apvts, holdTimeParamId, holdTimeSlider),
+            bypassButtonAttachment(apvts, bypassParamId, bypassButton)
+
+        {
+            label.setText(noteLabel, juce::NotificationType::dontSendNotification);
+            label.setJustificationType(juce::Justification::centredTop);
+        }
+
+        juce::Slider freqSlider, holdTimeSlider;
+        juce::ToggleButton bypassButton;
+        juce::Label label;
+
+        juce::AudioProcessorValueTreeState::SliderAttachment freqSliderAttachment, holdTimeSliderAttachment;        
+        juce::AudioProcessorValueTreeState::ButtonAttachment bypassButtonAttachment;
+        
+        std::vector<juce::Component*> getComponents()
+        {
+            return { &freqSlider, &holdTimeSlider, &bypassButton, &label };
+        }
+
+        void layoutComponents(juce::Rectangle<int> area, int labelHeight)
+        {
+            bypassButton.setBounds(area.removeFromRight(area.getWidth() / 4));
+            label.setBounds(area.removeFromTop(labelHeight));
+            freqSlider.setBounds(area.removeFromTop(area.getHeight() / 2));
+            holdTimeSlider.setBounds(area);
+        }
+    };
+
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     FeedbackerAudioProcessor& audioProcessor;
 
-    int labelHeight = 20;
+    static constexpr int labelHeight = 20;
 
     juce::Slider gainSlider, thresholdSlider, rampUpSpeedSlider; // knobs
-    juce::Slider osc1FreqSlider, 
-        osc2FreqSlider, 
-        osc3FreqSlider, 
-        osc4FreqSlider,
-        osc1HoldTimeSlider, 
-        osc2HoldTimeSlider, 
-        osc3HoldTimeSlider, 
-        osc4HoldTimeSlider;
-
-    juce::ToggleButton osc1BypassButton, osc2BypassButton, osc3BypassButton, osc4BypassButton;
 
     using APVTS = juce::AudioProcessorValueTreeState;
     using Attachment = APVTS::SliderAttachment;
 
     Attachment gainSliderAttachment,
         thresholdSliderAttachment,
-        rampUpSpeedSliderAttachment,
-        osc1FreqSliderAttachment, 
-        osc2FreqSliderAttachment, 
-        osc3FreqSliderAttachment, 
-        osc4FreqSliderAttachment,
-        osc1HoldTimeSliderAttachment, 
-        osc2HoldTimeSliderAttachment, 
-        osc3HoldTimeSliderAttachment, 
-        osc4HoldTimeSliderAttachment;
+        rampUpSpeedSliderAttachment;
+        
+    juce::Label rampUpSpeedLabel, thresholdLabel, gainLabel;
 
-    using ButtonAttachment = APVTS::ButtonAttachment;
+    static constexpr int numOscillators = 4;
+    std::array<OscillatorControls, numOscillators> oscillators;
 
-    ButtonAttachment osc1BypassButtonAttachment, 
-        osc2BypassButtonAttachment, 
-        osc3BypassButtonAttachment, 
-        osc4BypassButtonAttachment;
-
-    juce::Label rampUpSpeedLabel, thresholdLabel, gainLabel, note1Label, note2Label, note3Label, note4Label;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FeedbackerAudioProcessorEditor)
 };
 
