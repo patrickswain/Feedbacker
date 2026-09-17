@@ -12,6 +12,21 @@
 #include "Parameters.h"
 
 //==============================================================================
+
+struct FeedbackerLookAndFeel : juce::LookAndFeel_V4
+{
+    FeedbackerLookAndFeel();
+
+    void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider) override;
+    void drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, juce::Slider::SliderStyle style, juce::Slider& slider) override;
+
+private:
+    juce::Image imageStrip;
+    int frameSize = 0;
+    int numFrames = 0;
+    bool isHorizontal = false;
+};
+//==============================================================================
 /**
 */
 class FeedbackerAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -69,8 +84,10 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     FeedbackerAudioProcessor& audioProcessor;
+    FeedbackerLookAndFeel feedbackerLookAndFeel;
 
     static constexpr int labelHeight = 20;
+    static constexpr int numOscillators = 4;
 
     juce::Slider gainSlider, thresholdSlider, rampUpSpeedSlider; // knobs
 
@@ -83,7 +100,6 @@ private:
         
     juce::Label rampUpSpeedLabel, thresholdLabel, gainLabel;
 
-    static constexpr int numOscillators = 4;
     std::array<OscillatorControls, numOscillators> oscillators;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FeedbackerAudioProcessorEditor)

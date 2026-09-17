@@ -8,6 +8,82 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "BinaryData.h"
+//==============================================================================
+FeedbackerLookAndFeel::FeedbackerLookAndFeel()
+{
+    imageStrip = juce::ImageCache::getFromMemory(BinaryData::hise_Knob_medium_png, BinaryData::hise_Knob_medium_pngSize);
+
+    jassert(imageStrip.isValid());
+
+    if (imageStrip.getHeight() < imageStrip.getWidth())
+    {
+        isHorizontal = true;
+        numFrames = imageStrip.getWidth() / imageStrip.getHeight();
+    }
+    else
+    {
+        isHorizontal = false;
+        numFrames = imageStrip.getHeight() / imageStrip.getWidth();
+    }
+
+
+}
+
+void FeedbackerLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+{
+    
+    if (!imageStrip.isValid() || numFrames <= 0)
+    {
+        return;
+    }
+    //auto radius = (float)juce::jmin(width, height) / 2;
+    //auto centerX = x + (width / 2);
+    //auto centerY = y + (height / 2);
+    //auto diameter = radius * 2.0f;
+    //auto startingX = centerX - radius;
+    //auto startingY = centerY - radius;
+
+    //g.drawEllipse(startingX, startingY, diameter, diameter, 2.0f);
+    int currentFrame = 0;
+
+    int sourceX = 0;
+    int sourceY = 0;
+    int frameWidth = 0;
+    int frameHeight = 0;
+    juce::Image croppedImage;
+
+    currentFrame = juce::jlimit(0, numFrames - 1, 
+                    (int)std::floor(sliderPosProportional * numFrames));
+
+    // if position is 0.9
+    // 5 frames wide of 20 pixels each (100 pixels wide)
+
+    if (isHorizontal)
+    {
+        sourceX = currentFrame * frameWidth;
+        sourceY = 0;
+        frameWidth = imageStrip.getWidth() / numFrames;
+        frameHeight = imageStrip.getHeight();
+        croppedImage = imageStrip.getClippedImage(juce::Rectangle<int>(currentFrame * frameWidth, 0, frameWidth, frameHeight));
+    }
+    else
+    {
+        sourceX = 0;
+        sourceY = currentFrame * frameHeight;
+        frameWidth = imageStrip.getWidth();
+        frameHeight = imageStrip.getHeight() / numFrames;
+        croppedImage = imageStrip.getClippedImage(juce::Rectangle<int>(0, currentFrame * frameHeight, frameWidth, frameHeight));
+    }
+
+    g.drawImage(croppedImage, x, y, width, height, sourceX, sourceY, frameWidth, frameHeight, false);
+    
+}
+
+void FeedbackerLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, juce::Slider::SliderStyle style, juce::Slider& slider)
+{
+
+}
 
 //==============================================================================
 FeedbackerAudioProcessorEditor::FeedbackerAudioProcessorEditor(FeedbackerAudioProcessor& p)
@@ -26,10 +102,15 @@ FeedbackerAudioProcessorEditor::FeedbackerAudioProcessorEditor(FeedbackerAudioPr
         OscillatorControls{audioProcessor.apvts, Osc4FrequencyParam::id, Osc4HoldTimeParam::id, Osc4BypassParam::id, "Note 4"}
     }
 {
+
+    setLookAndFeel(&feedbackerLookAndFeel);
+
     for (Component* comp : getComps())
     {
         addAndMakeVisible(comp);
+        //comp->setLookAndFeel(&feedbackerLookAndFeel);
     }
+    
     
 
     rampUpSpeedLabel.setText("Ramp Up Speed", juce::NotificationType::dontSendNotification);
@@ -48,6 +129,11 @@ FeedbackerAudioProcessorEditor::FeedbackerAudioProcessorEditor(FeedbackerAudioPr
 
 FeedbackerAudioProcessorEditor::~FeedbackerAudioProcessorEditor()
 {
+    setLookAndFeel(nullptr);
+    //for (auto* comps : getComps())
+    //{
+    //    comps->setLookAndFeel(nullptr);
+    //}
 }
 
 //==============================================================================
