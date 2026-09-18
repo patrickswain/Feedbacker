@@ -10,79 +10,133 @@
 #include "PluginEditor.h"
 #include "BinaryData.h"
 //==============================================================================
-FeedbackerLookAndFeel::FeedbackerLookAndFeel()
+ImageStrip::ImageStrip()
 {
-    imageStrip = juce::ImageCache::getFromMemory(BinaryData::hise_Knob_medium_png, BinaryData::hise_Knob_medium_pngSize);
-
-    jassert(imageStrip.isValid());
-
-    if (imageStrip.getHeight() < imageStrip.getWidth())
-    {
-        isHorizontal = true;
-        numFrames = imageStrip.getWidth() / imageStrip.getHeight();
-    }
-    else
-    {
-        isHorizontal = false;
-        numFrames = imageStrip.getHeight() / imageStrip.getWidth();
-    }
-
 
 }
-
-void FeedbackerLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+ImageStrip::~ImageStrip()
 {
-    
-    if (!imageStrip.isValid() || numFrames <= 0)
+
+}
+void ImageStrip::loadImage(const char* file, size_t filesize)
+{
+    image = juce::ImageCache::getFromMemory(file, filesize);
+
+    if (!image.isValid())
     {
         return;
     }
-    //auto radius = (float)juce::jmin(width, height) / 2;
-    //auto centerX = x + (width / 2);
-    //auto centerY = y + (height / 2);
-    //auto diameter = radius * 2.0f;
-    //auto startingX = centerX - radius;
-    //auto startingY = centerY - radius;
 
-    //g.drawEllipse(startingX, startingY, diameter, diameter, 2.0f);
-    int currentFrame = 0;
+    
+    isHorizontal = (image.getWidth() > image.getHeight()) ? true : false;
+    numFrames = isHorizontal ? (image.getWidth() / image.getHeight()) : (image.getHeight() / image.getWidth());
+}
 
-    int sourceX = 0;
-    int sourceY = 0;
-    int frameWidth = 0;
-    int frameHeight = 0;
-    juce::Image croppedImage;
-
-    currentFrame = juce::jlimit(0, numFrames - 1, 
-                    (int)std::floor(sliderPosProportional * numFrames));
-
-    // if position is 0.9
-    // 5 frames wide of 20 pixels each (100 pixels wide)
-
+juce::Image ImageStrip::getCroppedFrame(float sliderPosProportional)
+{
+    if (!image.isValid() || numFrames < 1)
+    {
+        return {};
+    }
+    int index = juce::jlimit(0, numFrames - 1, (int)std::floor(sliderPosProportional * (numFrames - 1)));
+    int initialX;
+    int initialY;
+    int frameWidth = isHorizontal ? image.getWidth() / numFrames : image.getWidth();
+    int frameHeight = isHorizontal ? image.getHeight() : image.getHeight() / numFrames;
     if (isHorizontal)
     {
-        sourceX = currentFrame * frameWidth;
-        sourceY = 0;
-        frameWidth = imageStrip.getWidth() / numFrames;
-        frameHeight = imageStrip.getHeight();
-        croppedImage = imageStrip.getClippedImage(juce::Rectangle<int>(currentFrame * frameWidth, 0, frameWidth, frameHeight));
+        initialX = index * frameWidth;
+        initialY = 0;
     }
     else
     {
-        sourceX = 0;
-        sourceY = currentFrame * frameHeight;
-        frameWidth = imageStrip.getWidth();
-        frameHeight = imageStrip.getHeight() / numFrames;
-        croppedImage = imageStrip.getClippedImage(juce::Rectangle<int>(0, currentFrame * frameHeight, frameWidth, frameHeight));
+        initialX = 0;
+        initialY = index * frameHeight;
     }
 
-    g.drawImage(croppedImage, x, y, width, height, sourceX, sourceY, frameWidth, frameHeight, false);
-    
+    auto cropArea = juce::Rectangle<int>(initialX, initialY, frameWidth, frameHeight);
+
+    return image.getClippedImage(cropArea);
+}
+void ImageStrip::drawImage(juce::Graphics& g, juce::Image croppedFrame, juce::Rectangle<float> bounds)
+{
+    g.drawImage(croppedFrame, bounds);
+}
+//==============================================================================
+ImageStripLookAndFeel::ImageStripLookAndFeel()
+{
+    rotaryKnobStrip.loadImage(BinaryData::hise_Knob_medium_png, BinaryData::hise_Knob_medium_pngSize);
+    sliderStrip.loadImage(BinaryData::Slider_png, BinaryData::Slider_pngSize);
+    toggleButtonStrip.loadImage(BinaryData::ToggleButton_mn_png, BinaryData::ToggleButton_mn_pngSize);
+}
+void ImageStripLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+{
+    auto croppedFrame = rotaryKnobStrip.getCroppedFrame(sliderPosProportional);
+    rotaryKnobStrip.drawImage(g, croppedFrame, juce::Rectangle<int>(x, y, width, height).toFloat());
 }
 
-void FeedbackerLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, juce::Slider::SliderStyle style, juce::Slider& slider)
+void ImageStripLookAndFeel::drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, juce::Slider::SliderStyle style, juce::Slider& slider)
 {
+    
+    float sliderProportion;
+    float sliderMin = (float)slider.getBounds().getX();//(float)slider.getMaximum();
+    float sliderMax = sliderMin + (float)slider.getBounds().getWidth();//(float)slider.getMinimum();
+    if (sliderMax != sliderMin)
+    {
+        sliderProportion = juce::jlimit(0.0f, 1.0f, sliderPos / (sliderMax - sliderMin));
+    }
+    else
+    {
+        sliderProportion = 0;
+    }
+    DBG("Slider min = " + std::to_string(sliderMin) + ". Slider max = " + std::to_string(sliderMax) + ". current position = " + std::to_string(sliderPos));
+    DBG("bounds = " + slider.getBounds().toString());
+    DBG("Slider Proportion = " + std::to_string(sliderProportion));
+    auto croppedFrame = sliderStrip.getCroppedFrame(sliderProportion);
+    sliderStrip.drawImage(g, croppedFrame, juce::Rectangle<int>(x, y, width, height).toFloat());
+}
 
+void ImageStripLookAndFeel::drawLinearSliderBackground(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, juce::Slider::SliderStyle style, juce::Slider& slider)
+{
+    // no-op — suppress default background entirely for this test
+}
+//==============================================================================
+
+OscillatorControls::OscillatorControls(juce::AudioProcessorValueTreeState& apvts,
+    const juce::String& freqParamId,
+    const juce::String& holdTimeParamId,
+    const juce::String& bypassParamId,
+    const juce::String& noteLabel)
+    : freqSlider(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextBoxAbove),
+    holdTimeSlider(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextBoxAbove),
+    bypassButton("Bypass"),
+    freqSliderAttachment(apvts, freqParamId, freqSlider),
+    holdTimeSliderAttachment(apvts, holdTimeParamId, holdTimeSlider),
+    bypassButtonAttachment(apvts, bypassParamId, bypassButton)    
+{
+    label.setText(noteLabel, juce::NotificationType::dontSendNotification);
+    label.setJustificationType(juce::Justification::centredTop);
+
+}
+
+OscillatorControls::~OscillatorControls()
+{
+    bypassButton.setLookAndFeel(nullptr);
+    holdTimeSlider.setLookAndFeel(nullptr);
+    freqSlider.setLookAndFeel(nullptr);
+}
+
+std::vector<juce::Component*> OscillatorControls::getComponents()
+{
+    return { &freqSlider, &holdTimeSlider, &bypassButton, &label };
+}
+
+void OscillatorControls::layoutComponents(juce::Rectangle<int> area, int labelHeight)
+{
+    bypassButton.setBounds(area.removeFromRight(area.getWidth() / 4));
+    label.setBounds(area.removeFromTop(labelHeight));
+    freqSlider.setBounds(area.removeFromTop(area.getHeight() / 2));
+    holdTimeSlider.setBounds(area);
 }
 
 //==============================================================================
@@ -103,16 +157,12 @@ FeedbackerAudioProcessorEditor::FeedbackerAudioProcessorEditor(FeedbackerAudioPr
     }
 {
 
-    setLookAndFeel(&feedbackerLookAndFeel);
-
     for (Component* comp : getComps())
     {
         addAndMakeVisible(comp);
-        //comp->setLookAndFeel(&feedbackerLookAndFeel);
+        comp->setLookAndFeel(&imageStripLookAndFeel);
     }
-    
-    
-
+        
     rampUpSpeedLabel.setText("Ramp Up Speed", juce::NotificationType::dontSendNotification);
     thresholdLabel.setText("Threshold", juce::NotificationType::dontSendNotification);
     gainLabel.setText("Feedback Gain", juce::NotificationType::dontSendNotification);
@@ -129,11 +179,10 @@ FeedbackerAudioProcessorEditor::FeedbackerAudioProcessorEditor(FeedbackerAudioPr
 
 FeedbackerAudioProcessorEditor::~FeedbackerAudioProcessorEditor()
 {
-    setLookAndFeel(nullptr);
-    //for (auto* comps : getComps())
-    //{
-    //    comps->setLookAndFeel(nullptr);
-    //}
+    for (auto* comps : getComps())
+    {
+        comps->setLookAndFeel(nullptr);
+    }
 }
 
 //==============================================================================

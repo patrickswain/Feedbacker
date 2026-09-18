@@ -50,6 +50,8 @@ target_link_libraries(SharedFiles
 #************** Images *****************
 juce_add_binary_data(Images SOURCES
     Images/hise_Knob_medium.png
+    Images/Slider.png
+    Images/ToggleButton_mn.png
 )
 #************** Main App *****************
 if(APPLE)
