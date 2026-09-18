@@ -45,8 +45,14 @@ target_link_libraries(SharedFiles
         juce::juce_core
         juce::juce_data_structures
         juce::juce_dsp
+        juce::juce_gui_extra
 )
-
+#************** Images *****************
+juce_add_binary_data(Images SOURCES
+    Images/hise_Knob_medium.png
+    Images/Slider.png
+    Images/ToggleButton_mn.png
+)
 #************** Main App *****************
 if(APPLE)
     set(PLUGIN_FORMATS AU VST3 Standalone)
@@ -89,6 +95,7 @@ target_compile_definitions(Feedbacker
 target_link_libraries(Feedbacker
     PRIVATE
         SharedFiles
+        Images
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
