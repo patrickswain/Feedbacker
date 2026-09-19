@@ -6,9 +6,10 @@
   ==============================================================================
 */
 
+#include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "../Daddys Library/HelloWorld.h"
+
 
 //==============================================================================
 FeedbackerAudioProcessor::FeedbackerAudioProcessor() : apvts(*this, nullptr, "Parameters", createParameterLayout())
@@ -23,8 +24,7 @@ FeedbackerAudioProcessor::FeedbackerAudioProcessor() : apvts(*this, nullptr, "Pa
                        )
 #endif
 {
-    leftOsc.initialise([](double x) { return sin(x); }, lookupTableSize);
-    rightOsc.initialise([](double x) { return sin(x); }, lookupTableSize);
+    
 }
 
 FeedbackerAudioProcessor::~FeedbackerAudioProcessor()
@@ -102,10 +102,9 @@ void FeedbackerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     spec.maximumBlockSize = samplesPerBlock;
     spec.sampleRate = sampleRate;
 
-    leftOsc.prepare(spec);
-    rightOsc.prepare(spec);
+    oscManager.prepare(spec);
 
-    updateGain();
+    //updateGain();
 }
 
 void FeedbackerAudioProcessor::releaseResources()
@@ -146,8 +145,10 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     int numSamples = buffer.getNumSamples();
+    settings.numSamples = numSamples;
 
     // update values to user inputs
+    // At this point basically just gets the threshold bc the rest are sent to osc manager
     getParamSettings(apvts);
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
@@ -160,43 +161,38 @@ void FeedbackerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         float rmsLevel = buffer.getRMSLevel(channel, 0, numSamples);
         rmsLevel = juce::Decibels::gainToDecibels(rmsLevel);
-        if (rmsLevel < triggerThreshold)
+
+        if (rmsLevel > decibelsBeforeFeedbackStarts) // prevents processing before guitar plays
         {
-            addFeedback = true;
+            firstNoteWasPlayed = true;
+        }
+
+        if ((rmsLevel < triggerThreshold) && (firstNoteWasPlayed))
+        {
+            settings.addFeedback = true;
         }
         else
         {
-            addFeedback = false;
-            currentGain = 0.0f;
-            updateGain();
+            settings.addFeedback = false;
         }
 
-        if (addFeedback)
-        {       
-            float currentSample;
-            for (auto sample = 0; sample < numSamples; ++sample)
-            {         
-
-                if (channel == 0)
-                {
-                    currentSample = (float)leftOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
-                }
-                else
-                {
-                    currentSample = (float)rightOsc.processSample(0.0); // Empty sample parameter bc I have custom gain ramping
-                }
-                channelData[sample] += currentSample * currentGain;
-                currentGain = smoothedGain.getNextValue();
-            }
+        oscManager.updateSettings(settings);
+                          
+        juce::dsp::AudioBlock<float> block(buffer);
+        juce::dsp::ProcessContextReplacing<float> context(block);
+            
+        if (channel == 0)
+        {
+            oscManager.process(context);
         }
-        
+ 
     }
 }
 
 //==============================================================================
 bool FeedbackerAudioProcessor::hasEditor() const
 {
-    return false; // (change this to false if you choose to not supply an editor)
+    return true; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* FeedbackerAudioProcessor::createEditor()
@@ -221,9 +217,9 @@ void FeedbackerAudioProcessor::setStateInformation (const void* data, int sizeIn
 
 void FeedbackerAudioProcessor::updateGain()
 {
-    smoothedGain.reset(currentSampleRate, rampUpSpeed / 1000.00);
-    smoothedGain.setCurrentAndTargetValue(0.0001f);
-    smoothedGain.setTargetValue(oscLevel);
+    //smoothedGain.reset(currentSampleRate, settings.osc1rampUpSpeedSeconds);
+    //smoothedGain.setCurrentAndTargetValue(0.0001f);
+    //smoothedGain.setTargetValue(oscLevel);
 }
 //==============================================================================
 // This creates new instances of the plugin..
@@ -236,10 +232,25 @@ juce::AudioProcessorValueTreeState::ParameterLayout FeedbackerAudioProcessor::cr
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
+    // Global
     layout.add(std::make_unique<juce::AudioParameterFloat>(TriggerThresholdParam::id, TriggerThresholdParam::name, TriggerThresholdParam::range, TriggerThresholdParam::defaultValue));    
     layout.add(std::make_unique<juce::AudioParameterFloat>(SynthVolumeParam::id, SynthVolumeParam::name, SynthVolumeParam::range, SynthVolumeParam::defaultValue));
     layout.add(std::make_unique<juce::AudioParameterFloat>(RampUpSpeedParam::id, RampUpSpeedParam::name, RampUpSpeedParam::range, RampUpSpeedParam::defaultValue));
-    layout.add(std::make_unique<juce::AudioParameterFloat>(SynthFrequencyParam::id, SynthFrequencyParam::name, SynthFrequencyParam::range, SynthFrequencyParam::defaultValue));
+    // Frequencies
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc1FrequencyParam::id, Osc1FrequencyParam::name, Osc1FrequencyParam::range, Osc1FrequencyParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc2FrequencyParam::id, Osc2FrequencyParam::name, Osc2FrequencyParam::range, Osc2FrequencyParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc3FrequencyParam::id, Osc3FrequencyParam::name, Osc3FrequencyParam::range, Osc3FrequencyParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc4FrequencyParam::id, Osc4FrequencyParam::name, Osc4FrequencyParam::range, Osc4FrequencyParam::defaultValue));
+    //Hold times
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc1HoldTimeParam::id, Osc1HoldTimeParam::name, Osc1HoldTimeParam::range, Osc1HoldTimeParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc2HoldTimeParam::id, Osc2HoldTimeParam::name, Osc2HoldTimeParam::range, Osc2HoldTimeParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc3HoldTimeParam::id, Osc3HoldTimeParam::name, Osc3HoldTimeParam::range, Osc3HoldTimeParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(Osc4HoldTimeParam::id, Osc4HoldTimeParam::name, Osc4HoldTimeParam::range, Osc4HoldTimeParam::defaultValue));
+    //Bypasses
+    layout.add(std::make_unique<juce::AudioParameterBool>(Osc1BypassParam::id, Osc1BypassParam::name, Osc1BypassParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterBool>(Osc2BypassParam::id, Osc2BypassParam::name, Osc2BypassParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterBool>(Osc3BypassParam::id, Osc3BypassParam::name, Osc3BypassParam::defaultValue));
+    layout.add(std::make_unique<juce::AudioParameterBool>(Osc4BypassParam::id, Osc4BypassParam::name, Osc4BypassParam::defaultValue));
 
     return layout;
 }
@@ -248,25 +259,32 @@ void FeedbackerAudioProcessor::getParamSettings(juce::AudioProcessorValueTreeSta
 {
     // Feedback on/off logic
     triggerThreshold = apvts.getRawParameterValue(TriggerThresholdParam::id)->load();
-    
-    // Note choice
-    oscFrequency = apvts.getRawParameterValue(SynthFrequencyParam::id)->load();
-    leftOsc.setFrequency(oscFrequency);
-    rightOsc.setFrequency(oscFrequency);
 
     // Volume ramp up
-    float rampUpSpeedNew = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
-    float rampUpSpeedInSeconds = rampUpSpeed / 1000.00;
-    float oscLevelNew = static_cast<double>(apvts.getRawParameterValue(SynthVolumeParam::id)->load());
+    float rampUpSpeedMs = apvts.getRawParameterValue(RampUpSpeedParam::id)->load();
+    settings.rampUpSpeed = (rampUpSpeedMs / 1000.00) * static_cast<float>(currentSampleRate);
+    settings.gain = apvts.getRawParameterValue(SynthVolumeParam::id)->load();
 
-    gainIncrementLinear = oscLevel / (2 * (rampUpSpeed / 1000.0f) * static_cast<float>(currentSampleRate));
-    gainIncrementLog = 10 * log10(gainIncrementLinear);
+    // Note choice
+    settings.osc1Freq = apvts.getRawParameterValue(Osc1FrequencyParam::id)->load();
+    settings.osc2Freq = apvts.getRawParameterValue(Osc2FrequencyParam::id)->load();
+    settings.osc3Freq = apvts.getRawParameterValue(Osc3FrequencyParam::id)->load();
+    settings.osc4Freq = apvts.getRawParameterValue(Osc4FrequencyParam::id)->load();
 
-    if ((rampUpSpeedNew != rampUpSpeed) || (oscLevelNew != oscLevel))
-    {
-        updateGain();
-    }
-    
-    rampUpSpeed = rampUpSpeedNew;
-    oscLevel = oscLevelNew;
+    // Bypass
+    settings.osc1Bypass = apvts.getRawParameterValue(Osc1BypassParam::id)->load();
+    settings.osc2Bypass = apvts.getRawParameterValue(Osc2BypassParam::id)->load();
+    settings.osc3Bypass = apvts.getRawParameterValue(Osc3BypassParam::id)->load();
+    settings.osc4Bypass = apvts.getRawParameterValue(Osc4BypassParam::id)->load();
+
+    // Hold times
+    settings.osc1HoldTime = apvts.getRawParameterValue(Osc1HoldTimeParam::id)->load() * static_cast<float>(currentSampleRate) / 1000.0f;
+    settings.osc2HoldTime = apvts.getRawParameterValue(Osc2HoldTimeParam::id)->load() * static_cast<float>(currentSampleRate) / 1000.0f;
+    settings.osc3HoldTime = apvts.getRawParameterValue(Osc3HoldTimeParam::id)->load() * static_cast<float>(currentSampleRate) / 1000.0f;
+    settings.osc4HoldTime = apvts.getRawParameterValue(Osc4HoldTimeParam::id)->load() * static_cast<float>(currentSampleRate) / 1000.0f;
+
+    // Note Change times
+    settings.osc1NoteChangeTime = settings.rampUpSpeed;
+
+
 }

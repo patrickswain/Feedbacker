@@ -1,0 +1,78 @@
+/*
+  ==============================================================================
+
+    RampingValues.cpp
+    Created: 26 Aug 2026 4:09:54pm
+    Author:  Patrick
+
+  ==============================================================================
+*/
+#include <cmath>
+#include <juce_core/juce_core.h>
+#include "RampingValues.h"
+
+void RampingValues::setRampingType(RampType type)
+{
+    rampType = type;
+}
+
+void RampingValues::setGainAndSpeed(float newStartingGain, float newTargetGain, float rampUpSpeedInSamples)
+{
+    // difference in gain = amplitude of hann function
+    // rampupspeed = numsamples in hann funtion
+    currentStep = 0;
+    totalSteps = rampUpSpeedInSamples;
+    startingGain = newStartingGain;
+    targetGain = newTargetGain;
+    gainDifference = targetGain - startingGain;
+}
+
+/* 
+This function doesn't work like juce::smoothedvalue
+Use buffer[i] * gain.getNextValue()
+instead of
+buffer[i] * currentGain; currentGain += gain.getNextValue()
+*/
+float RampingValues::getNextValue()
+{
+    if (currentStep > totalSteps)
+    {
+        return targetGain;
+    }
+
+    // 0.5 * ( 1 - (cos((2 * pi * n) / T)) // n is current x axis location, T is total period
+    // 0.5 is to convert -1 to 1 cosign to -0.5 to 0.5, 
+    // and 1 - is to shift values up to 
+    // This function goes up, then down across the period of 0 to T - 1
+    // So we need to double the period, to only get ramp up or ramp down
+    // and rampup goes 0 to midpoint
+
+    // cos amplitude is double, so have to half the difference of the two gains, and shift the starting point up by half of the distance
+    // dont need extra expression for ramping down bc gaindiff will be negative
+    if (rampType == HannFunction)
+    {
+        return (startingGain + (targetGain - startingGain) * 0.5f * (1.0f - std::cos((2 * juce::MathConstants<float>::pi * currentStep++) / (2 * totalSteps))));
+    }
+    else if (rampType == Linear) // linear
+    {
+        return (((targetGain - startingGain) / totalSteps) * currentStep++) + startingGain;
+    }
+    else if (rampType == DecibelLinear)
+    {
+        startingDB = juce::Decibels::gainToDecibels(startingGain);
+        targetDB = juce::Decibels::gainToDecibels(targetGain);
+        float result = (((targetDB - startingDB) / totalSteps) * currentStep++) + startingDB;
+        
+        return juce::Decibels::decibelsToGain(result);
+    }
+    else
+    {
+        startingDB = juce::Decibels::gainToDecibels(startingGain);
+        targetDB = juce::Decibels::gainToDecibels(targetGain);
+        float theta = (2 * juce::MathConstants<float>::pi * currentStep++) / 2 * totalSteps; // Maybe change total steps?
+        float temp = 0.5f * (1.0f - std::cos(theta));
+        float result = startingDB + (targetDB - startingDB) * theta;
+        return juce::Decibels::decibelsToGain(result);
+    }
+    
+}

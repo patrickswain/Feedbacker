@@ -1,0 +1,75 @@
+/*
+  ==============================================================================
+
+    MyOsc.cpp
+    Created: 10 Aug 2026 7:51:22pm
+    Author:  Patrick
+
+  ==============================================================================
+*/
+
+#include "MyOsc.h"
+#include <math.h>
+
+MyOsc::MyOsc()
+{
+    maintone.initialise([](float x) {return sin(x);}, lookupTableSize);
+    pitchLfo.initialise([](float x) {return 0.5 * sin(x);}, lookupTableSize);
+
+    rv.setRampingType(RampingValues::RampType::DecibelLinear);
+
+}
+
+MyOsc::~MyOsc()
+{
+
+}
+
+void MyOsc::prepare(const juce::dsp::ProcessSpec& spec)
+{
+    sampleRate = spec.sampleRate;
+    samplesPerBlock = spec.maximumBlockSize;
+
+    maintone.prepare(spec);
+    maintone.setFrequency(440.0f);
+
+    pitchLfo.prepare(spec);
+    pitchLfo.setFrequency(pitchLfoRate);
+
+}
+
+void MyOsc::setFrequency(float newFrequency)
+{
+    if (newFrequency != targetPitch)
+    {
+        targetPitch = newFrequency;
+        maintone.setFrequency(targetPitch);
+    }
+}
+
+void MyOsc::setGain(float newGain) // Used for OscManager to set
+{
+    if (newGain != targetGain) // revent reseting when settings are constanly updated
+    {
+        DBG("setGain: current gain = " << currentGain << ", oldTarget = " << targetGain << ", new target = " << newGain);
+        DBG("Ramptime = " << rampUpSpeed);
+
+        targetGain = newGain;
+        rv.setGainAndSpeed(currentGain, targetGain, rampUpSpeed);
+    }
+}
+
+void MyOsc::setRampUpSpeed(float newRampUpSpeed)
+{
+    if (newRampUpSpeed != rampUpSpeed) // prevent reseting since settings are constanly updated
+    {
+        rampUpSpeed = newRampUpSpeed;
+        rv.setGainAndSpeed(currentGain, targetGain, rampUpSpeed);
+    }
+}
+
+void MyOsc::setState(State newState)
+{
+    currentState = newState;
+}
+

@@ -8,53 +8,13 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_audio_processors/juce_audio_processors.h>
+#include "MyOsc.h"
+#include "OscManager.h"
+#include <Parameters.h>
+#include "ParamSettings.h"
 
-struct TriggerThresholdParam
-{
-    static constexpr auto id = "triggerThreshold";
-    static constexpr auto name = "Trigger Threshold (db)";
-    inline static const juce::NormalisableRange<float> range = { -30.0f, 0.0f };
-    static constexpr float defaultValue = { -20.0f };
-};
 
-struct RampUpSpeedParam
-{
-    static constexpr auto id = "rampUpSpeed";
-    static constexpr auto name = "Ramp Up Speed (milliseconds)";
-    inline static const juce::NormalisableRange<float> range = { 50.0f, 4000.0f }; // Double check for overflow problems
-    static constexpr float defaultValue = { 1000.0f };
-};
-
-struct SynthVolumeParam
-{
-    static constexpr auto id = "synthVolume";
-    static constexpr auto name = "Synth Volume";
-    inline static const juce::NormalisableRange<float> range = { 0.0f, 1.0f };;
-    static constexpr float defaultValue = { 0.5f };
-};
-
-struct SynthFrequencyParam
-{
-    static constexpr auto id = "synthFrequency";
-    static constexpr auto name = "Synth Freq";
-    inline static const juce::NormalisableRange<float> range = { 40.0f, 5000.0f };;
-    static constexpr float defaultValue = { 440.0f };
-};
-//struct SynthFrequencyParam
-//{
-//    static constexpr auto id = "synthFrequency";
-//    static constexpr auto name = "Synth Freq";
-//    static juce::StringArray choices()
-//    {
-//        return { "200", "500", "1000", "1500", "2000" };
-//    }
-//    static constexpr float defaultValue = 0;
-//};
-
-//==============================================================================
-/**
-*/
 class FeedbackerAudioProcessor  : public juce::AudioProcessor
 {
 public:
@@ -108,23 +68,12 @@ private:
     double oscFrequency = 440.0;
     double oscLevel = 0.25;
 
-    // juce oscillator
-    juce::dsp::Oscillator<double> leftOsc;
-    juce::dsp::Oscillator<double> rightOsc;
-    size_t lookupTableSize = 1024;
-
-    // Volume Ramp Up
-    float rampUpSpeed = 0.0f;
-    float gainIncrement = 0.0f;
-    float gainIncrementLinear = 0.0f;
-    float gainIncrementLog = 0.0f;
-    float currentGain = 0.0f;
-    float maxIncrementLog = 0.0f;
-    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Multiplicative> smoothedGain;
-
-    // For Trigger
-    bool addFeedback = false;
+    ParamSettings settings;
+    OscManager oscManager;
+    
     float triggerThreshold = 0.0f;
+    float decibelsBeforeFeedbackStarts = -50.0f;
+    bool firstNoteWasPlayed = true;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FeedbackerAudioProcessor)
 };
